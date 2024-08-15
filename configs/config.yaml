@@ -1,0 +1,38 @@
+model:
+  name: "meta-llama/Llama-2-7b-hf"
+  max_length: 512
+
+training:
+  sft:
+    output_dir: "../../output/sft_results"
+    evaluation_strategy: "epoch"
+    learning_rate: 5e-5
+    per_device_train_batch_size: 4
+    per_device_eval_batch_size: 4
+    num_train_epochs: 3
+    weight_decay: 0.01
+    logging_dir: '../logs'
+  
+  dpo:
+    output_dir: "../../output/dpo_results"
+    evaluation_strategy: "epoch"
+    learning_rate: 5e-5
+    per_device_train_batch_size: 4
+    per_device_eval_batch_size: 4
+    num_train_epochs: 3
+    weight_decay: 0.01
+    logging_dir: '../logs'
+
+dataset:
+  name: "PKU-Alignment/PKU-SafeRLHF-10K"
+  cache_dir: "../../dataset/cache/"
+  save_dir: "../../dataset/processed/"
+  load_dir_train: "../../dataset/processed/train"
+  load_dir_test: "../../dataset/processed/test"
+  load_dir_val: "../../dataset/processed/validation"
+  test_size: 0.3
+  val_size: 0.5
+  seed: 42
+  prompt_column: "prompt"
+  response_0_column: "response_0"
+  response_1_column: "response_1"
