@@ -2,6 +2,18 @@ import torch
 from transformers import Trainer, TrainingArguments
 from peft import get_peft_model, LoraConfig, TaskType
 
+class CustomTrainer(Trainer):
+    def compute_loss(self, model, inputs):
+        """Custom loss computation to ensure loss is returned correctly."""
+        labels = inputs.get("labels")
+        outputs = model(**inputs)
+        logits = outputs.get("logits")
+
+        # Compute the loss using CrossEntropy
+        loss_fct = torch.nn.CrossEntropyLoss()
+        loss = loss_fct(logits.view(-1, model.config.vocab_size), labels.view(-1))
+        return loss
+
 class SFTTrainer:
     def __init__(self, model, tokenized_dataset, config):
         self.config = config
@@ -23,18 +35,6 @@ class SFTTrainer:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
 
-    def compute_loss(self, model, inputs):
-        """Custom loss computation to ensure loss is returned correctly."""
-        labels = inputs.get("labels")
-        outputs = model(**inputs)
-        logits = outputs.get("logits")
-
-        # Compute the loss using CrossEntropy
-        loss_fct = torch.nn.CrossEntropyLoss()
-        loss = loss_fct(logits.view(-1, self.model.config.vocab_size), labels.view(-1))
-        return loss
-
-
     def train(self):
         # Define training arguments for SFT (Supervised Fine-Tuning)
         training_args = TrainingArguments(
@@ -47,16 +47,15 @@ class SFTTrainer:
             weight_decay=self.config['training']['sft']['weight_decay'],
             logging_dir=self.config['training']['sft']['logging_dir'],
             fp16=True,
-	    gradient_accumulation_steps=self.config['training']['sft']['gradient_accumulation_steps']
+            gradient_accumulation_steps=self.config['training']['sft']['gradient_accumulation_steps']
         )
 
-        # Initialize the Trainer for SFT
-        trainer = Trainer(
+        # Initialize the CustomTrainer for SFT
+        trainer = CustomTrainer(
             model=self.model,
             args=training_args,
             train_dataset=self.tokenized_dataset['train'],
-            eval_dataset=self.tokenized_dataset['validation'],
-	    compute_loss=self.compute_loss
+            eval_dataset=self.tokenized_dataset['validation']
         )
 
         # Train the model using Supervised Fine-Tuning (SFT)
