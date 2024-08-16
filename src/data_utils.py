@@ -128,20 +128,25 @@ class DataLoader:
     def preprocess_for_sft(self, dataset):
         logging.info("Preprocessing dataset for SFT...")
     
-        # Log dataset structure
-        logging.info(f"Dataset structure: {dataset}")
-    
         tokenized_splits = {}
-        for split in dataset:
-            logging.info(f"Processing {split} split...")
     
-            # Log the first few examples in the split to check if data is as expected
-            logging.info(f"Sample before tokenization in {split}: {dataset[split][0]}")
+        for split_name, split_dataset in dataset.items():
+            logging.info(f"Processing {split_name} split...")
     
-            tokenized_splits[split] = dataset[split].map(self.tokenize_function, batched=True)
+            tokenized_examples = []
+    
+            for example in split_dataset:
+                tokenized_example = self.tokenize_function(example)
+                tokenized_examples.append(tokenized_example)
+    
+            # Convert the list of tokenized examples back into a dataset
+            tokenized_splits[split_name] = DatasetDict.from_dict({
+                key: [example[key] for example in tokenized_examples]
+                for key in tokenized_examples[0]
+            })
     
             # Log a sample after tokenization
-            logging.info(f"Sample tokenized entry from {split} split: {tokenized_splits[split][0]}")
+            logging.info(f"Sample tokenized entry from {split_name} split: {tokenized_splits[split_name][0]}")
     
         logging.info("Preprocessing for SFT completed.")
         return DatasetDict(tokenized_splits)
