@@ -1,5 +1,5 @@
 import os
-from datasets import load_dataset, DatasetDict, load_from_disk
+from datasets import load_dataset, DatasetDict, load_from_disk, Dataset
 from transformers import LlamaTokenizer
 import json
 import yaml
@@ -144,9 +144,9 @@ class DataLoader:
 
             
             # Convert the list of tokenized examples back into a dataset
-            tokenized_splits[split_name] = DatasetDict.from_dict({
+            tokenized_splits[split_name] = Dataset.from_dict({
                 key: [example[key] for example in tokenized_examples]
-                for key in tokenized_examples[0]
+                for key in tokenized_examples[0].keys()
             })
     
             # Log a sample after tokenization
