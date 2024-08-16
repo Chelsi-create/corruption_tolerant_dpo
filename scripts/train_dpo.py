@@ -1,4 +1,9 @@
 import os
+import sys
+
+# Add the project root directory to PYTHONPATH
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from src.data_utils import DataLoader
 from src.model_utils import ModelLoader
 from src.dpo_trainer import DPOTrainerModule
