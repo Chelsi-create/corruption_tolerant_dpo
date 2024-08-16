@@ -88,26 +88,34 @@ class DataLoader:
         return {"train": train_dataset, "validation": val_dataset, "test": test_dataset}
 
     def tokenize_function(self, examples):
-        logging.info("Tokenizing examples...")
-        tokenized_inputs = self.tokenizer(
-            examples[self.config["dataset"]["prompt_column"]],
+        # Tokenize the prompt
+        inputs = self.tokenizer(
+            examples[self.config['dataset']['prompt_column']],
             padding="max_length",
             truncation=True,
-            max_length=self.config["model"]["max_length"],
+            max_length=self.config['model']['max_length']
         )
-
-        tokenized_labels = self.tokenizer(
-            examples[self.config["dataset"]["response_0_column"]],
+    
+        # Determine which response to use as the label based on safer_response_id
+        labels_text = [
+            examples[self.config['dataset']['response_0_column']] if example[self.config['dataset']['safer_response_id']] == 0
+            else examples[self.config['dataset']['response_1_column']]
+            for example in examples
+        ]
+    
+        # Tokenize the labels
+        labels = self.tokenizer(
+            labels_text,
             padding="max_length",
             truncation=True,
-            max_length=self.config["model"]["max_length"],
+            max_length=self.config['model']['max_length']
         )
+    
+        # Assign the tokenized labels to the 'labels' key in the inputs
+        inputs["labels"] = labels["input_ids"]
+    
+        return inputs
 
-        # Add the labels to the tokenized inputs
-        tokenized_inputs["labels"] = tokenized_labels["input_ids"]
-
-        logging.info("Tokenization completed.")
-        return tokenized_inputs
 
     def preprocess_for_sft(self, dataset):
         logging.info("Preprocessing dataset for SFT...")
