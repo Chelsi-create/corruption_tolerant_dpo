@@ -15,7 +15,7 @@ class CustomTrainer(Trainer):
         """Custom loss computation to ensure loss is returned correctly."""
         # Print or log a sample input to verify if it contains the labels
         print("Hello")
-        print("Sample input (including labels):", {k: v[0].cpu().numpy() if isinstance(v, torch.Tensor) else v[0] for k, v in inputs.items()})
+        # print("Sample input (including labels):", {k: v[0].cpu().numpy() if isinstance(v, torch.Tensor) else v[0] for k, v in inputs.items()})
         labels = inputs.get("labels")
         
         # Ensure labels are not None
