@@ -23,6 +23,18 @@ class SFTTrainer:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
 
+    def compute_loss(self, model, inputs):
+        """Custom loss computation to ensure loss is returned correctly."""
+        labels = inputs.get("labels")
+        outputs = model(**inputs)
+        logits = outputs.get("logits")
+
+        # Compute the loss using CrossEntropy
+        loss_fct = torch.nn.CrossEntropyLoss()
+        loss = loss_fct(logits.view(-1, self.model.config.vocab_size), labels.view(-1))
+        return loss
+
+
     def train(self):
         # Define training arguments for SFT (Supervised Fine-Tuning)
         training_args = TrainingArguments(
@@ -34,7 +46,8 @@ class SFTTrainer:
             num_train_epochs=self.config['training']['sft']['num_train_epochs'],
             weight_decay=self.config['training']['sft']['weight_decay'],
             logging_dir=self.config['training']['sft']['logging_dir'],
-            fp16=torch.cuda.is_available()  # Enable mixed precision if on GPU
+            fp16=True,
+	    gradient_accumulation_steps=self.config['training']['sft']['gradient_accumulation_steps']
         )
 
         # Initialize the Trainer for SFT
@@ -43,6 +56,7 @@ class SFTTrainer:
             args=training_args,
             train_dataset=self.tokenized_dataset['train'],
             eval_dataset=self.tokenized_dataset['validation'],
+	    compute_loss=self.compute_loss
         )
 
         # Train the model using Supervised Fine-Tuning (SFT)

@@ -1,11 +1,21 @@
 import os
 from datasets import load_dataset, DatasetDict, load_from_disk
 from transformers import LlamaTokenizer
+import json
+import yaml
 
 class DataLoader:
     def __init__(self, config):
         self.config = config
-        self.tokenizer = LlamaTokenizer.from_pretrained(self.config['model']['name'])
+        self.cache_dir = self.config.get('cache_dir', None)
+        
+        self.tokenizer = LlamaTokenizer.from_pretrained(self.config['model']['name'],cache_dir = self.cache_dir,use_auth_token=True)
+        self.tokenizer.pad_token = self.tokenizer.eos_token
+
+    def load_config(config_path):
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+        return config
 
     def load_raw_dataset(self):
         dataset = load_dataset(self.config['dataset']['name'], cache_dir=self.config['dataset']['cache_dir'])
@@ -54,19 +64,34 @@ class DataLoader:
         }
 
     def tokenize_function(self, examples):
-        return self.tokenizer(
+        tokenized_inputs = self.tokenizer(
             examples[self.config['dataset']['prompt_column']],
             padding = "max_length",
             truncation=True,
             max_length = self.config['model']['max_length']
         )
 
+	# Tokenize the response (this will serve as the labels)
+    	tokenized_labels = self.tokenizer(
+            examples[self.config['dataset']['response_0_column']],  # or whichever response column you're using as labels
+            padding="max_length",
+            truncation=True,
+            max_length=self.config['model']['max_length']
+        )
+
+        # Add the labels to the tokenized inputs
+        tokenized_inputs["labels"] = tokenized_labels["input_ids"]
+
+        return tokenized_inputs
+
     def preprocess_for_sft(self, dataset):
         """
         Tokenize the dataset for Supervised Fine-Tuning (SFT).
         """
-        tokenize_dataset = dataset.map(self.tokenize_function, batched=True)
-        return tokenize_dataset
+        tokenized_splits = {}
+        for split in dataset:
+            tokenized_splits[split] = dataset[split].map(self.tokenize_function, batched=True)
+        return DatasetDict(tokenized_splits)
 
     def preprocess_for_dpo(self, dataset):
         """
