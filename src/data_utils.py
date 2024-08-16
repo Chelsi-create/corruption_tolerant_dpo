@@ -3,11 +3,19 @@ from datasets import load_dataset, DatasetDict, load_from_disk
 from transformers import LlamaTokenizer
 import json
 import yaml
+import logging
+import warnings
 
+# Ignore all warnings
+warnings.simplefilter("ignore")
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class DataLoader:
     def __init__(self, config):
         self.config = config
+        logging.info("Initializing DataLoader with config: %s", self.config)
         self.cache_dir = self.config.get("cache_dir", None)
 
         self.tokenizer = LlamaTokenizer.from_pretrained(
@@ -21,6 +29,7 @@ class DataLoader:
         return config
 
     def load_raw_dataset(self):
+        logging.info("Loading raw dataset from %s", self.config['dataset']['name'])
         dataset = load_dataset(
             self.config["dataset"]["name"],
             cache_dir=self.config["dataset"]["cache_dir"],
@@ -31,13 +40,16 @@ class DataLoader:
         """
         Load, shuffle, split, and save a dataset according to the configuration.
         """
+        logging.info("Preparing and saving dataset...")
         # Load the raw dataset
         ds = self.load_raw_dataset()
 
         # Shuffle the dataset
+        logging.info("Shuffling the dataset...")
         shuffled_ds = ds["train"].shuffle(seed=self.config["dataset"]["seed"])
 
         # Split into train and test sets
+        logging.info("Splitting the dataset into train, validation, and test sets...")
         train_test_split = shuffled_ds.train_test_split(
             test_size=self.config["dataset"]["test_size"]
         )
@@ -57,21 +69,26 @@ class DataLoader:
         )
 
         # Save the splits to the specified directory
+        logging.info("Saving the split datasets to disk at %s", self.config['dataset']['save_dir'])
         ds_split.save_to_disk(self.config["dataset"]["save_dir"])
-
+        
+        logging.info("Dataset preparation and saving completed.")
         return ds_split
 
     def load_saved_data(self):
         """
         Load the dataset splits from the disk.
         """
+        logging.info("Loading saved datasets from disk...")
         train_dataset = load_from_disk(self.config["dataset"]["load_dir_train"])
         val_dataset = load_from_disk(self.config["dataset"]["load_dir_val"])
         test_dataset = load_from_disk(self.config["dataset"]["load_dir_test"])
-
+        
+        logging.info("Saved datasets loaded successfully.")
         return {"train": train_dataset, "validation": val_dataset, "test": test_dataset}
 
     def tokenize_function(self, examples):
+        logging.info("Tokenizing examples...")
         tokenized_inputs = self.tokenizer(
             examples[self.config["dataset"]["prompt_column"]],
             padding="max_length",
@@ -89,17 +106,18 @@ class DataLoader:
         # Add the labels to the tokenized inputs
         tokenized_inputs["labels"] = tokenized_labels["input_ids"]
 
+        logging.info("Tokenization completed.")
         return tokenized_inputs
 
     def preprocess_for_sft(self, dataset):
-        """
-        Tokenize the dataset for Supervised Fine-Tuning (SFT).
-        """
+        logging.info("Preprocessing dataset for SFT...")
         tokenized_splits = {}
         for split in dataset:
-            tokenized_splits[split] = dataset[split].map(
-                self.tokenize_function, batched=True
-            )
+            logging.info("Processing %s split...", split)
+            tokenized_splits[split] = dataset[split].map(self.tokenize_function, batched=True)
+            logging.info("Sample tokenized entry from %s split: %s", split, tokenized_splits[split][0])
+
+        logging.info("Preprocessing for SFT completed.")
         return DatasetDict(tokenized_splits)
 
     def preprocess_for_dpo(self, dataset):
