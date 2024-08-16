@@ -88,9 +88,6 @@ class DataLoader:
         return {"train": train_dataset, "validation": val_dataset, "test": test_dataset}
 
     def tokenize_function(self, example):
-        logging.info("Initializing Tokenizer for a single example...")
-        # # Log the example to check its structure
-        # logging.info(f"Received example: {example} (type: {type(example)})")
     
         # Check if the example is a dictionary
         if not isinstance(example, dict):
@@ -102,8 +99,6 @@ class DataLoader:
             truncation=True,
             max_length=self.config['model']['max_length']
         )
-    
-        logging.info(f"Tokenized Inputs: {inputs['input_ids']}")  # Log tokenized input IDs to verify
     
         # Determine which response to use as the label based on safer_response_id for the example
         safer_response_id = example.get(self.config['dataset']['safer_response_id_column'])
@@ -125,12 +120,10 @@ class DataLoader:
             max_length=self.config['model']['max_length']
         )
     
-        # Print the tokenized labels to ensure they're correctly processed
-        logging.info(f"Tokenized Label: {labels['input_ids']}")
+        # logging.info(f"Tokenized Label: {labels['input_ids']}")
     
-        # Assign the tokenized labels to the 'labels' key in the inputs
         inputs["labels"] = labels.get("input_ids", None)
-        logging.info(f"Final Inputs with Labels: {inputs}")
+        # logging.info(f"Final Inputs with Labels: {inputs}")
     
         return inputs
 
@@ -144,10 +137,11 @@ class DataLoader:
     
             tokenized_examples = []
     
-            for example in split_dataset:
+            for example in tqdm(split_dataset, desc=f"Tokenizing {split_name} split"):
                 tokenized_example = self.tokenize_function(example)
                 tokenized_examples.append(tokenized_example)
-    
+
+            
             # Convert the list of tokenized examples back into a dataset
             tokenized_splits[split_name] = DatasetDict.from_dict({
                 key: [example[key] for example in tokenized_examples]
@@ -155,7 +149,7 @@ class DataLoader:
             })
     
             # Log a sample after tokenization
-            logging.info(f"Sample tokenized entry from {split_name} split: {tokenized_splits[split_name][0]}")
+            # logging.info(f"Sample tokenized entry from {split_name} split: {tokenized_splits[split_name][0]}")
     
         logging.info("Preprocessing for SFT completed.")
         return DatasetDict(tokenized_splits)
