@@ -87,13 +87,17 @@ class DataLoader:
         logging.info("Saved datasets loaded successfully.")
         return {"train": train_dataset, "validation": val_dataset, "test": test_dataset}
 
-    def tokenize_function(self, examples):
-        # Tokenize the prompt for the entire batch
-        logging.info("Initializing Tokenizer...")
-        logging.info(f"Received examples: {examples}")  # Log the incoming examples to see their structure
+    def tokenize_function(self, example):
+        logging.info("Initializing Tokenizer for a single example...")
+        # # Log the example to check its structure
+        # logging.info(f"Received example: {example} (type: {type(example)})")
+    
+        # Check if the example is a dictionary
+        if not isinstance(example, dict):
+            raise TypeError(f"Expected example to be a dictionary but got {type(example)} instead.")
     
         inputs = self.tokenizer(
-            examples[self.config['dataset']['prompt_column']],
+            example[self.config['dataset']['prompt_column']],
             padding="max_length",
             truncation=True,
             max_length=self.config['model']['max_length']
@@ -101,14 +105,19 @@ class DataLoader:
     
         logging.info(f"Tokenized Inputs: {inputs['input_ids']}")  # Log tokenized input IDs to verify
     
-        # Determine which response to use as the label based on safer_response_id for each example
-        labels_text = [
-            example[self.config['dataset']['response_0_column']] if example[self.config['dataset']['safer_response_id_column']] == 0
+        # Determine which response to use as the label based on safer_response_id for the example
+        safer_response_id = example.get(self.config['dataset']['safer_response_id_column'])
+        
+        # Validate safer_response_id
+        if safer_response_id is None:
+            raise ValueError("safer_response_id is missing in the example.")
+        
+        labels_text = (
+            example[self.config['dataset']['response_0_column']] if safer_response_id == 0
             else example[self.config['dataset']['response_1_column']]
-            for example in examples
-        ]
+        )
     
-        # Tokenize the labels for the entire batch
+        # Tokenize the label for the single example
         labels = self.tokenizer(
             labels_text,
             padding="max_length",
@@ -117,7 +126,7 @@ class DataLoader:
         )
     
         # Print the tokenized labels to ensure they're correctly processed
-        logging.info(f"Tokenized Labels: {labels['input_ids']}")
+        logging.info(f"Tokenized Label: {labels['input_ids']}")
     
         # Assign the tokenized labels to the 'labels' key in the inputs
         inputs["labels"] = labels.get("input_ids", None)
