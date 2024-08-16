@@ -103,7 +103,7 @@ class DataLoader:
     
         # Determine which response to use as the label based on safer_response_id for each example
         labels_text = [
-            example[self.config['dataset']['response_0_column']] if example[self.config['dataset']['safer_response_id']] == 0
+            example[self.config['dataset']['response_0_column']] if example[self.config['dataset']['safer_response_id_column']] == 0
             else example[self.config['dataset']['response_1_column']]
             for example in examples
         ]
