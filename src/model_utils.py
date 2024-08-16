@@ -68,8 +68,11 @@ class ModelLoader:
         """Load the fine-tuned SFT model using PEFT's AutoPeftModelForCausalLM."""
         self.logger.info(f"Loading SFT model from {sft_model_pth}...")
         
-        if not os.path.exists(sft_model_pth):
-            raise FileNotFoundError(f"The path {sft_model_pth} does not exist.")
+        if os.path.exists(sft_model_pth):
+            self.logger.info(f"Directory exists. Contents: {os.listdir(sft_model_pth)}")
+        else:
+            self.logger.error(f"Directory does not exist: {sft_model_pth}")
+            return None
     
         try:
             if os.path.isdir(sft_model_pth):
