@@ -13,24 +13,22 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 class CustomTrainer(Trainer):
     def compute_loss(self, model, inputs):
         """Custom loss computation to ensure loss is returned correctly."""
-        logging.info("Computing loss...")
-
         labels = inputs.get("labels")
+        
+        # Ensure labels are not None
         if labels is None:
-            logging.error("Labels are required for computing loss but got None.")
             raise ValueError("Labels are required for computing loss but got None.")
         
         outputs = model(**inputs)
         logits = outputs.get("logits")
+        
+        # Ensure logits are not None
         if logits is None:
-            logging.error("Logits were not returned by the model. Ensure that the model's forward method is correct.")
             raise ValueError("Logits were not returned by the model. Ensure that the model's forward method is correct.")
         
         # Compute the loss using CrossEntropy
         loss_fct = torch.nn.CrossEntropyLoss()
         loss = loss_fct(logits.view(-1, model.config.vocab_size), labels.view(-1))
-        
-        logging.info("Loss computed successfully.")
         return loss
 
 class SFTTrainer:
