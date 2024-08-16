@@ -90,6 +90,8 @@ class DataLoader:
     def tokenize_function(self, examples):
         # Tokenize the prompt for the entire batch
         logging.info("Initializing Tokenizer...")
+        logging.info(f"Received examples: {examples}")  # Log the incoming examples to see their structure
+    
         inputs = self.tokenizer(
             examples[self.config['dataset']['prompt_column']],
             padding="max_length",
@@ -97,13 +99,15 @@ class DataLoader:
             max_length=self.config['model']['max_length']
         )
     
+        logging.info(f"Tokenized Inputs: {inputs['input_ids']}")  # Log tokenized input IDs to verify
+    
         # Determine which response to use as the label based on safer_response_id for each example
         labels_text = [
             example[self.config['dataset']['response_0_column']] if example[self.config['dataset']['safer_response_id']] == 0
             else example[self.config['dataset']['response_1_column']]
             for example in examples
         ]
-        
+    
         # Tokenize the labels for the entire batch
         labels = self.tokenizer(
             labels_text,
@@ -111,26 +115,34 @@ class DataLoader:
             truncation=True,
             max_length=self.config['model']['max_length']
         )
-
-        
+    
         # Print the tokenized labels to ensure they're correctly processed
-        print("Tokenized Labels:", labels)
-
-        
+        logging.info(f"Tokenized Labels: {labels['input_ids']}")
+    
         # Assign the tokenized labels to the 'labels' key in the inputs
         inputs["labels"] = labels.get("input_ids", None)
-        print("Final Inputs with labels:", inputs)
-        
+        logging.info(f"Final Inputs with Labels: {inputs}")
+    
         return inputs
 
     def preprocess_for_sft(self, dataset):
         logging.info("Preprocessing dataset for SFT...")
+    
+        # Log dataset structure
+        logging.info(f"Dataset structure: {dataset}")
+    
         tokenized_splits = {}
         for split in dataset:
-            logging.info("Processing %s split...", split)
+            logging.info(f"Processing {split} split...")
+    
+            # Log the first few examples in the split to check if data is as expected
+            logging.info(f"Sample before tokenization in {split}: {dataset[split][0]}")
+    
             tokenized_splits[split] = dataset[split].map(self.tokenize_function, batched=True)
-            # logging.info("Sample tokenized entry from %s split: %s", split, tokenized_splits[split][0])
-
+    
+            # Log a sample after tokenization
+            logging.info(f"Sample tokenized entry from {split} split: {tokenized_splits[split][0]}")
+    
         logging.info("Preprocessing for SFT completed.")
         return DatasetDict(tokenized_splits)
 
