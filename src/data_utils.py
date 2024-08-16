@@ -1,7 +1,6 @@
 import os
 from datasets import load_dataset, DatasetDict, load_from_disk, Dataset
 from transformers import LlamaTokenizer
-import json
 import yaml
 import logging
 import warnings
@@ -17,10 +16,19 @@ class DataLoader:
     def __init__(self, config):
         self.config = config
         logging.info("Initializing DataLoader with config: ")
+
+        # Load the Hugging Face token from cred.yaml
+        cred_path = os.path.join(os.path.dirname(__file__), '../cred.yaml')
+        with open(cred_path, 'r') as f:
+            credentials = yaml.safe_load(f)
+            self.hf_token = credentials['hugging_face']['token']
+
         self.cache_dir = self.config.get("cache_dir", None)
 
         self.tokenizer = LlamaTokenizer.from_pretrained(
-            self.config["model"]["name"], cache_dir=self.cache_dir, use_auth_token=True
+            self.config["model"]["name"],
+            cache_dir=self.cache_dir,
+            use_auth_token=self.hf_token  # Use the token from cred.yaml
         )
         self.tokenizer.pad_token = self.tokenizer.eos_token
 
@@ -38,9 +46,6 @@ class DataLoader:
         return dataset
 
     def prepare_and_save_dataset(self):
-        """
-        Load, shuffle, split, and save a dataset according to the configuration.
-        """
         logging.info("Preparing and saving dataset...")
         # Load the raw dataset
         ds = self.load_raw_dataset()
@@ -77,9 +82,6 @@ class DataLoader:
         return ds_split
 
     def load_saved_data(self):
-        """
-        Load the dataset splits from the disk.
-        """
         logging.info("Loading saved datasets from disk...")
         train_dataset = load_from_disk(self.config["dataset"]["load_dir_train"])
         val_dataset = load_from_disk(self.config["dataset"]["load_dir_val"])
@@ -121,10 +123,7 @@ class DataLoader:
             max_length=self.config['model']['max_length']
         )
     
-        # logging.info(f"Tokenized Label: {labels['input_ids']}")
-    
         inputs["labels"] = labels.get("input_ids", None)
-        # logging.info(f"Final Inputs with Labels: {inputs}")
     
         return inputs
 
@@ -149,16 +148,12 @@ class DataLoader:
                 for key in tokenized_examples[0].keys()
             })
     
-            # Log a sample after tokenization
-            # logging.info(f"Sample tokenized entry from {split_name} split: {tokenized_splits[split_name][0]}")
-    
         logging.info("Preprocessing for SFT completed.")
         return DatasetDict(tokenized_splits)
 
     def preprocess_for_dpo(self, dataset):
-        """
-        Prepare the dataset for Direct Policy Optimization (DPO).
-        """
+        logging.info("Preprocessing dataset for DPO...")
+    
         formatted_dataset = {}
     
         for split_name, split_data in dataset.items():
@@ -173,4 +168,5 @@ class DataLoader:
             
             formatted_dataset[split_name] = formatted_examples
     
+        logging.info("Preprocessing for DPO completed.")
         return formatted_dataset
