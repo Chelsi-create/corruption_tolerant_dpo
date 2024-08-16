@@ -38,3 +38,4 @@ dataset:
   prompt_column: "prompt"
   response_0_column: "response_0"
   response_1_column: "response_1"
+  safer_response_id_column: "safer_response_id"
