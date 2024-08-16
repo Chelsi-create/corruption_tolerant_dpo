@@ -95,6 +95,9 @@ class DataLoader:
             truncation=True,
             max_length=self.config['model']['max_length']
         )
+        
+        # Print the tokenized inputs to check the output
+        print("Tokenized Inputs:", inputs)
     
         # Determine which response to use as the label based on safer_response_id
         labels_text = [
@@ -102,6 +105,9 @@ class DataLoader:
             else examples[self.config['dataset']['response_1_column']]
             for example in examples
         ]
+        
+        # Print the selected labels text to ensure it's correct
+        print("Selected Labels Text:", labels_text)
     
         # Tokenize the labels
         labels = self.tokenizer(
@@ -110,10 +116,16 @@ class DataLoader:
             truncation=True,
             max_length=self.config['model']['max_length']
         )
+        
+        # Print the tokenized labels to ensure they're correctly processed
+        print("Tokenized Labels:", labels)
     
         # Assign the tokenized labels to the 'labels' key in the inputs
-        inputs["labels"] = labels["input_ids"]
+        inputs["labels"] = labels.get("input_ids", None)
     
+        # Print the final inputs to see if the labels are included
+        print("Final Inputs with Labels:", inputs)
+        
         return inputs
 
 
@@ -123,7 +135,7 @@ class DataLoader:
         for split in dataset:
             logging.info("Processing %s split...", split)
             tokenized_splits[split] = dataset[split].map(self.tokenize_function, batched=True)
-            logging.info("Sample tokenized entry from %s split: %s", split, tokenized_splits[split][0])
+            # logging.info("Sample tokenized entry from %s split: %s", split, tokenized_splits[split][0])
 
         logging.info("Preprocessing for SFT completed.")
         return DatasetDict(tokenized_splits)
