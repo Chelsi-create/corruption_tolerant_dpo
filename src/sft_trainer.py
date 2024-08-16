@@ -1,32 +1,45 @@
 import torch
 from transformers import Trainer, TrainingArguments
 from peft import get_peft_model, LoraConfig, TaskType
+import warnings
+import logging
+
+# Ignore all warnings
+warnings.simplefilter("ignore")
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class CustomTrainer(Trainer):
     def compute_loss(self, model, inputs):
         """Custom loss computation to ensure loss is returned correctly."""
+        logging.info("Computing loss...")
+
         labels = inputs.get("labels")
-        
-        # Ensure labels are not None
         if labels is None:
+            logging.error("Labels are required for computing loss but got None.")
             raise ValueError("Labels are required for computing loss but got None.")
         
         outputs = model(**inputs)
         logits = outputs.get("logits")
-        
-        # Ensure logits are not None
         if logits is None:
+            logging.error("Logits were not returned by the model. Ensure that the model's forward method is correct.")
             raise ValueError("Logits were not returned by the model. Ensure that the model's forward method is correct.")
         
         # Compute the loss using CrossEntropy
         loss_fct = torch.nn.CrossEntropyLoss()
         loss = loss_fct(logits.view(-1, model.config.vocab_size), labels.view(-1))
+        
+        logging.info("Loss computed successfully.")
         return loss
+
 class SFTTrainer:
     def __init__(self, model, tokenized_dataset, config):
         self.config = config
         self.tokenized_dataset = tokenized_dataset
 
+        logging.info("Initializing SFTTrainer...")
+        
         # Prepare the LoRA configuration
         lora_config = LoraConfig(
             task_type=TaskType.CAUSAL_LM,  # Causal Language Modeling task
@@ -36,14 +49,17 @@ class SFTTrainer:
             target_modules=["q_proj", "v_proj"],  # Target modules to apply LoRA to
         )
 
-        # Integrate LoRA with the model using PEFT
+        logging.info("Integrating LoRA with the model...")
         self.model = get_peft_model(model, lora_config)
 
         # Move model to GPU if available
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
+        logging.info("Model successfully moved to %s.", self.device)
 
     def train(self):
+        logging.info("Starting the training process...")
+        
         # Define training arguments for SFT (Supervised Fine-Tuning)
         training_args = TrainingArguments(
             output_dir=self.config['training']['sft']['output_dir'],
@@ -57,6 +73,7 @@ class SFTTrainer:
             fp16=True,
             gradient_accumulation_steps=self.config['training']['sft']['gradient_accumulation_steps']
         )
+        logging.info("Training arguments initialized.")
 
         # Initialize the CustomTrainer for SFT
         trainer = CustomTrainer(
@@ -65,15 +82,21 @@ class SFTTrainer:
             train_dataset=self.tokenized_dataset['train'],
             eval_dataset=self.tokenized_dataset['validation']
         )
+        logging.info("CustomTrainer initialized.")
 
         # Train the model using Supervised Fine-Tuning (SFT)
+        logging.info("Training started...")
         trainer.train()
+        logging.info("Training completed.")
 
         # Save the fine-tuned model
+        logging.info("Saving the fine-tuned model...")
         self.model.save_pretrained(self.config['training']['sft']['output_dir'])
-        print(f"Model saved to {self.config['training']['sft']['output_dir']}")
+        logging.info("Model saved to %s.", self.config['training']['sft']['output_dir'])
 
         # Optionally, save the tokenizer
-        tokenizer = self.tokenized_dataset['tokenizer']  # Assume tokenizer is part of the dataset
-        tokenizer.save_pretrained(self.config['training']['sft']['output_dir'])
-        print(f"Tokenizer saved to {self.config['training']['sft']['output_dir']}")
+        if 'tokenizer' in self.tokenized_dataset:
+            tokenizer = self.tokenized_dataset['tokenizer']
+            logging.info("Saving the tokenizer...")
+            tokenizer.save_pretrained(self.config['training']['sft']['output_dir'])
+            logging.info("Tokenizer saved to %s.", self.config['training']['sft']['output_dir'])
