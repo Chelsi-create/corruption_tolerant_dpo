@@ -20,22 +20,36 @@ class DPOTrainerModule:
                 logging.StreamHandler()
             ]
         )
-        logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__)
 
-        logger.info("Loading models...")
-        self.model = AutoPeftModelForCausalLM.from_pretrained(sft_model_path)
-        self.reference_model = AutoPeftModelForCausalLM.from_pretrained(sft_model_path)
+        self.logger.info("Loading models...")
+
+        # Fetch Hugging Face token from config if it exists
+        hf_token = self.config.get('hugging_face', {}).get('token', None)
+        if not hf_token:
+            self.logger.warning("Hugging Face token not found in config. Ensure the model is accessible without authentication.")
+
+        try:
+            self.model = AutoPeftModelForCausalLM.from_pretrained(
+                sft_model_path,
+                use_auth_token=hf_token
+            )
+            self.reference_model = AutoPeftModelForCausalLM.from_pretrained(
+                sft_model_path,
+                use_auth_token=hf_token
+            )
+        except Exception as e:
+            self.logger.error(f"Error loading models: {e}")
+            raise e
 
         # Move models to GPU if available
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(device)
         self.reference_model.to(device)
-        logger.info(f"Models loaded and moved to {device}.")
+        self.logger.info(f"Models loaded and moved to {device}.")
 
     def train(self):
-        logger = logging.getLogger(__name__)
-        
-        logger.info("Setting up training arguments...")
+        self.logger.info("Setting up training arguments...")
         # Define training arguments for DPO (Direct Policy Optimization)
         training_args = TrainingArguments(
             output_dir=self.config['training']['dpo']['output_dir'],
@@ -49,28 +63,44 @@ class DPOTrainerModule:
             fp16=torch.cuda.is_available()  # Enable mixed precision if on GPU
         )
 
-        logger.info("Initializing the DPO Trainer...")
+        self.logger.info("Initializing the DPO Trainer...")
         # Initialize the DPO Trainer
-        trainer = DPOTrainer(
-            model=self.model,
-            reference_model=self.reference_model,
-            args=training_args,
-            train_dataset=self.formatted_dataset['train'],
-            eval_dataset=self.formatted_dataset['validation']
-        )
+        try:
+            trainer = DPOTrainer(
+                model=self.model,
+                reference_model=self.reference_model,
+                args=training_args,
+                train_dataset=self.formatted_dataset['train'],
+                eval_dataset=self.formatted_dataset['validation']
+            )
+        except Exception as e:
+            self.logger.error(f"Error initializing DPO Trainer: {e}")
+            raise e
 
-        logger.info("Starting DPO training...")
+        self.logger.info("Starting DPO training...")
         # Train the model using Direct Policy Optimization (DPO)
-        trainer.train()
-        logger.info("DPO training completed.")
+        try:
+            trainer.train()
+            self.logger.info("DPO training completed.")
+        except Exception as e:
+            self.logger.error(f"Error during DPO training: {e}")
+            raise e
 
-        logger.info("Saving the fine-tuned DPO model...")
+        self.logger.info("Saving the fine-tuned DPO model...")
         # Save the fine-tuned DPO model
-        self.model.save_pretrained(self.config['training']['dpo']['output_dir'])
-        logger.info(f"Model saved to {self.config['training']['dpo']['output_dir']}")
+        try:
+            self.model.save_pretrained(self.config['training']['dpo']['output_dir'])
+            self.logger.info(f"Model saved to {self.config['training']['dpo']['output_dir']}")
+        except Exception as e:
+            self.logger.error(f"Error saving the model: {e}")
+            raise e
 
         # Optionally, save the tokenizer if needed
         if 'tokenizer' in self.formatted_dataset:
-            tokenizer = self.formatted_dataset['tokenizer']  # Assume tokenizer is part of the dataset
-            tokenizer.save_pretrained(self.config['training']['dpo']['output_dir'])
-            logger.info(f"Tokenizer saved to {self.config['training']['dpo']['output_dir']}")
+            try:
+                tokenizer = self.formatted_dataset['tokenizer']  # Assume tokenizer is part of the dataset
+                tokenizer.save_pretrained(self.config['training']['dpo']['output_dir'])
+                self.logger.info(f"Tokenizer saved to {self.config['training']['dpo']['output_dir']}")
+            except Exception as e:
+                self.logger.error(f"Error saving the tokenizer: {e}")
+                raise e
