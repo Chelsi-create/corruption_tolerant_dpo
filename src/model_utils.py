@@ -66,7 +66,7 @@ class ModelLoader:
     
     def load_sft_model(self, sft_model_pth):
         """Load the fine-tuned SFT model using PEFT's AutoPeftModelForCausalLM."""
-        self.logger.info(f"Loading SFT model from {sft_model_path}...")
+        self.logger.info(f"Loading SFT model from {sft_model_pth}...")
         try:
             if os.path.isdir(sft_model_pth):
                 # It's a local directory, so no need for a token
