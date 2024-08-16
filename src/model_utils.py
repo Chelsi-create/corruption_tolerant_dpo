@@ -64,20 +64,20 @@ class ModelLoader:
             self.logger.error(f"Failed to prepare LoRA model: {e}")
             raise
     
-    def load_sft_model(self, sft_model_path):
+    def load_sft_model(self, sft_model_pth):
         """Load the fine-tuned SFT model using PEFT's AutoPeftModelForCausalLM."""
         self.logger.info(f"Loading SFT model from {sft_model_path}...")
         try:
-            if os.path.isdir(sft_model_path):
+            if os.path.isdir(sft_model_pth):
                 # It's a local directory, so no need for a token
                 model = AutoPeftModelForCausalLM.from_pretrained(
-                    sft_model_path,
+                    sft_model_pth,
                     cache_dir=self.cache_dir  # Use custom cache directory if provided
                 )
             else:
                 # It's a model name or path from Hugging Face Hub, require a token
                 model = AutoPeftModelForCausalLM.from_pretrained(
-                    sft_model_path,
+                    sft_model_pth,
                     cache_dir=self.cache_dir,  # Use custom cache directory if provided
                     use_auth_token=self.config['hugging_face']['token'] if 'hugging_face' in self.config and 'token' in self.config['hugging_face'] else True  # Use authentication token for gated models
                 )
