@@ -74,6 +74,7 @@ class ModelLoader:
         try:
             if os.path.isdir(sft_model_pth):
                 # It's a local directory
+                print("Hello")
                 if not os.path.exists(os.path.join(sft_model_pth, "adapter_config.json")):
                     raise FileNotFoundError(f"adapter_config.json not found in {sft_model_pth}. This might not be a PEFT model.")
                 
@@ -83,6 +84,7 @@ class ModelLoader:
                     torch_dtype=torch.float16,  # or the appropriate dtype
                     device_map="auto"
                 )
+                print("Hello Chelsi")
             else:
                 # It's a model name or path from Hugging Face Hub
                 model = AutoPeftModelForCausalLM.from_pretrained(
