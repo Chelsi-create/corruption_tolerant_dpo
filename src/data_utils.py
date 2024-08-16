@@ -159,15 +159,18 @@ class DataLoader:
         """
         Prepare the dataset for Direct Policy Optimization (DPO).
         """
-
-        def preprocess_function(examples):
-            return {
-                "prompt": examples[self.config["dataset"]["prompt_column"]],
-                "chosen": examples[self.config["dataset"]["response_0_column"]],
-                "rejected": examples[self.config["dataset"]["response_1_column"]],
-            }
-
-        formatted_dataset = dataset.map(
-            preprocess_function, remove_columns=dataset["train"].column_names
-        )
+        formatted_dataset = {}
+    
+        for split_name, split_data in dataset.items():
+            formatted_examples = []
+            for example in split_data:
+                formatted_example = {
+                    "prompt": example[self.config['dataset']['prompt_column']],
+                    "chosen": example[self.config['dataset']['response_0_column']] if example[self.config['dataset']['safer_response_id_column']] == 0 else example[self.config['dataset']['response_1_column']],
+                    "rejected": example[self.config['dataset']['response_1_column']] if example[self.config['dataset']['safer_response_id_column']] == 0 else example[self.config['dataset']['response_0_column']]
+                }
+                formatted_examples.append(formatted_example)
+            
+            formatted_dataset[split_name] = formatted_examples
+    
         return formatted_dataset
