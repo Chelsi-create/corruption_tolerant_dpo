@@ -88,28 +88,22 @@ class DataLoader:
         return {"train": train_dataset, "validation": val_dataset, "test": test_dataset}
 
     def tokenize_function(self, examples):
-        # Tokenize the prompt
+        # Tokenize the prompt for the entire batch
         inputs = self.tokenizer(
             examples[self.config['dataset']['prompt_column']],
             padding="max_length",
             truncation=True,
             max_length=self.config['model']['max_length']
         )
-        
-        # Print the tokenized inputs to check the output
-        print("Tokenized Inputs:", inputs)
     
-        # Determine which response to use as the label based on safer_response_id
+        # Determine which response to use as the label based on safer_response_id for each example
         labels_text = [
-            examples[self.config['dataset']['response_0_column']] if example[self.config['dataset']['safer_response_id']] == 0
-            else examples[self.config['dataset']['response_1_column']]
+            example[self.config['dataset']['response_0_column']] if example[self.config['dataset']['safer_response_id']] == 0
+            else example[self.config['dataset']['response_1_column']]
             for example in examples
         ]
         
-        # Print the selected labels text to ensure it's correct
-        print("Selected Labels Text:", labels_text)
-    
-        # Tokenize the labels
+        # Tokenize the labels for the entire batch
         labels = self.tokenizer(
             labels_text,
             padding="max_length",
@@ -117,17 +111,10 @@ class DataLoader:
             max_length=self.config['model']['max_length']
         )
         
-        # Print the tokenized labels to ensure they're correctly processed
-        print("Tokenized Labels:", labels)
-    
         # Assign the tokenized labels to the 'labels' key in the inputs
-        inputs["labels"] = labels.get("input_ids", None)
-    
-        # Print the final inputs to see if the labels are included
-        print("Final Inputs with Labels:", inputs)
+        inputs["labels"] = labels["input_ids"]
         
         return inputs
-
 
     def preprocess_for_sft(self, dataset):
         logging.info("Preprocessing dataset for SFT...")
