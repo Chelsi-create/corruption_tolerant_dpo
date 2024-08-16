@@ -18,6 +18,9 @@ class CustomTrainer(Trainer):
         # Ensure labels are not None
         if labels is None:
             raise ValueError("Labels are required for computing loss but got None.")
+
+        # Print or log a sample input to verify if it contains the labels
+        print("Sample input (including labels):", {k: v[0].cpu().numpy() if isinstance(v, torch.Tensor) else v[0] for k, v in inputs.items()})
         
         outputs = model(**inputs)
         logits = outputs.get("logits")
