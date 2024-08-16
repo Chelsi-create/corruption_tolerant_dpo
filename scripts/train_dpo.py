@@ -7,10 +7,11 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.data_utils import DataLoader
 from src.model_utils import ModelLoader
 from src.dpo_trainer import DPOTrainerModule
-from scripts.data_loader import load_config
 
 def main():
-    config = load_config('config/config.yaml')
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(script_dir, '../configs/config.yaml')
+    config = DataLoader.load_config(config_path)
 
     # Initialize the DataLoader
     data_loader = DataLoader(config)
