@@ -5,6 +5,7 @@ import json
 import yaml
 import logging
 import warnings
+import tqdm
 
 # Ignore all warnings
 warnings.simplefilter("ignore")
