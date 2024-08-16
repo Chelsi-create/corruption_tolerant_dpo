@@ -89,6 +89,7 @@ class DataLoader:
 
     def tokenize_function(self, examples):
         # Tokenize the prompt for the entire batch
+        logging.info("Initializing Tokenizer...")
         inputs = self.tokenizer(
             examples[self.config['dataset']['prompt_column']],
             padding="max_length",
@@ -110,9 +111,15 @@ class DataLoader:
             truncation=True,
             max_length=self.config['model']['max_length']
         )
+
+        
+        # Print the tokenized labels to ensure they're correctly processed
+        print("Tokenized Labels:", labels)
+
         
         # Assign the tokenized labels to the 'labels' key in the inputs
-        inputs["labels"] = labels["input_ids"]
+        inputs["labels"] = labels.get("input_ids", None)
+        print("Final Inputs with labels:", inputs)
         
         return inputs
 
