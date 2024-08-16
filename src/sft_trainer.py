@@ -11,7 +11,7 @@ warnings.simplefilter("ignore")
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class CustomTrainer(Trainer):
-    def compute_loss(self, model, inputs):
+    def compute_loss(self, model, inputs, return_outputs=False):
         """Custom loss computation to ensure loss is returned correctly."""
         # Print or log a sample input to verify if it contains the labels
         # print("Hello")
@@ -32,7 +32,12 @@ class CustomTrainer(Trainer):
         # Compute the loss using CrossEntropy
         loss_fct = torch.nn.CrossEntropyLoss()
         loss = loss_fct(logits.view(-1, model.config.vocab_size), labels.view(-1))
-        return loss
+
+        # If return_outputs is True, return both loss and outputs
+        if return_outputs:
+            return loss, outputs
+        else:
+            return loss
 
 class SFTTrainer:
     def __init__(self, model, tokenized_dataset, config):
