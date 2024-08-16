@@ -66,12 +66,7 @@ class DataLoader:
     def tokenize_function(self, examples):
         tokenized_inputs = self.tokenizer(examples[self.config['dataset']['prompt_column']],padding = "max_length",truncation=True,max_length = self.config['model']['max_length'])
 
-    	tokenized_labels = self.tokenizer(
-            examples[self.config['dataset']['response_0_column']],  # or whichever response column you're using as labels
-            padding="max_length",
-            truncation=True,
-            max_length=self.config['model']['max_length']
-        )
+    	tokenized_labels = self.tokenizer(examples[self.config['dataset']['response_0_column']],padding="max_length",truncation=True,max_length=self.config['model']['max_length'])
 
         # Add the labels to the tokenized inputs
         tokenized_inputs["labels"] = tokenized_labels["input_ids"]
