@@ -18,7 +18,7 @@ class DataLoader:
         logging.info("Initializing DataLoader with config: ")
 
         # Load the Hugging Face token from cred.yaml
-        cred_path = os.path.join(os.path.dirname(__file__), '../cred.yaml')
+        cred_path = os.path.join(os.path.dirname(__file__), '..configs/cred.yaml')
         with open(cred_path, 'r') as f:
             credentials = yaml.safe_load(f)
             self.hf_token = credentials['hugging_face']['token']
