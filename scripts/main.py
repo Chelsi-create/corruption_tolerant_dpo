@@ -61,6 +61,6 @@ if __name__ == "__main__":
 
     # Prepare and save the dataset
     # ds_split = prepare_and_save_dataset(config)
-    # load_saved_data(config)
+    load_saved_data(config)
 
 
