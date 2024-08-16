@@ -2,6 +2,7 @@ import torch
 from transformers import LlamaForCausalLM, LlamaTokenizer
 from peft import LoraConfig, TaskType, get_peft_model, AutoPeftModelForCausalLM
 import logging
+import os
 
 class ModelLoader:
     def __init__(self, config):
@@ -61,22 +62,31 @@ class ModelLoader:
         except Exception as e:
             self.logger.error(f"Failed to prepare LoRA model: {e}")
             raise
-
+    
     def load_sft_model(self, sft_model_path):
         """Load the fine-tuned SFT model using PEFT's AutoPeftModelForCausalLM."""
         self.logger.info(f"Loading SFT model from {sft_model_path}...")
         try:
-            model = AutoPeftModelForCausalLM.from_pretrained(
-                sft_model_path,
-                cache_dir=self.cache_dir,  # Use custom cache directory if provided
-                use_auth_token=self.config['hugging_face']['token'] if 'hugging_face' in self.config and 'token' in self.config['hugging_face'] else True  # Use authentication token for gated models
-            )
+            if os.path.isdir(sft_model_path):
+                # It's a local directory, so no need for a token
+                model = AutoPeftModelForCausalLM.from_pretrained(
+                    sft_model_path,
+                    cache_dir=self.cache_dir  # Use custom cache directory if provided
+                )
+            else:
+                # It's a model name or path from Hugging Face Hub, require a token
+                model = AutoPeftModelForCausalLM.from_pretrained(
+                    sft_model_path,
+                    cache_dir=self.cache_dir,  # Use custom cache directory if provided
+                    use_auth_token=self.config['hugging_face']['token'] if 'hugging_face' in self.config and 'token' in self.config['hugging_face'] else True  # Use authentication token for gated models
+                )
             model.to(self.device)
             self.logger.info("SFT model loaded and moved to device.")
             return model
         except Exception as e:
             self.logger.error(f"Failed to load SFT model: {e}")
             raise
+
 
     def load_model(self):
         """
