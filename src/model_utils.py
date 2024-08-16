@@ -17,7 +17,7 @@ class ModelLoader:
             tokenizer = LlamaTokenizer.from_pretrained(
                 self.config['model']['name'],
                 cache_dir=self.cache_dir,  # Use custom cache directory if provided
-                use_auth_token=self.config.get('hugging_face', {}).get('token', True)  # Use authentication token for gated models
+                use_auth_token=self.config['hugging_face']['token'] if 'hugging_face' in self.config and 'token' in self.config['hugging_face'] else True  # Use authentication token for gated models
             )
             self.logger.info("Tokenizer loaded successfully.")
             return tokenizer
@@ -32,7 +32,7 @@ class ModelLoader:
             model = LlamaForCausalLM.from_pretrained(
                 self.config['model']['name'],
                 cache_dir=self.cache_dir,  # Use custom cache directory if provided
-                use_auth_token=self.config.get('hugging_face', {}).get('token', True)  # Use authentication token for gated models
+                use_auth_token=self.config['hugging_face']['token'] if 'hugging_face' in self.config and 'token' in self.config['hugging_face'] else True  # Use authentication token for gated models
             )
             model.to(self.device)
             self.logger.info("Base model loaded and moved to device.")
@@ -69,7 +69,7 @@ class ModelLoader:
             model = AutoPeftModelForCausalLM.from_pretrained(
                 sft_model_path,
                 cache_dir=self.cache_dir,  # Use custom cache directory if provided
-                use_auth_token=self.config.get('hugging_face', {}).get('token', True)  # Use authentication token for gated models
+                use_auth_token=self.config['hugging_face']['token'] if 'hugging_face' in self.config and 'token' in self.config['hugging_face'] else True  # Use authentication token for gated models
             )
             model.to(self.device)
             self.logger.info("SFT model loaded and moved to device.")
