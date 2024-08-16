@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 class DataLoader:
     def __init__(self, config):
         self.config = config
-        logging.info("Initializing DataLoader with config: %s", self.config)
+        logging.info("Initializing DataLoader with config: ")
         self.cache_dir = self.config.get("cache_dir", None)
 
         self.tokenizer = LlamaTokenizer.from_pretrained(
