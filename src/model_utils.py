@@ -83,9 +83,9 @@ class ModelLoader:
     def load_model(self):
         """Load the model based on the configuration."""
         self.logger.info("Loading model based on configuration...")
-        if self.config['model'].get('sft_model_path'):
+        if self.config['training']['sft'].get('output_dir'):
             # Load a fine-tuned model if the path is provided
-            model = self.load_sft_model(self.config['model']['sft_model_path'])
+            model = self.load_sft_model(self.config['training']['sft']['output_dir'])
         else:
             # Otherwise, load the base model and prepare it with LoRA
             base_model = self.load_base_model()
