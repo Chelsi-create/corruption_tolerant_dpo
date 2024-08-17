@@ -3,7 +3,7 @@ import torch
 import logging
 import yaml
 from transformers import LlamaForCausalLM, LlamaTokenizer, TrainingArguments
-from peft import LoraConfig, PeftModel, AutoPeftModelForCausalLM, get_peft_model
+from peft import LoraConfig, PeftModel, AutoPeftModelForCausalLM, get_peft_model, PeftConfig
 from datasets import load_from_disk
 from trl import DPOTrainer
 
