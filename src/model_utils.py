@@ -8,13 +8,13 @@ from datasets import load_from_disk
 from trl import DPOTrainer
 
 class ModelLoader:
-    def __init__(self, config, credentials):
+    def __init__(self, sft_model_path, config, credentials):
         self.config = config
         self.credentials = credentials
+        self.sft_model_path = sft_model_path
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.cache_dir = self.config.get('cache_dir', None)
         self.logger = logging.getLogger(__name__)
-        self.sft_model_path = self.config['training']['sft']['output_dir']
         self.training_adapter_name = "training_model"
         self.reference_adapter_name = "reference_model"
 
@@ -89,7 +89,7 @@ class ModelLoader:
         self.logger.info("Loading model based on configuration...")
         if self.config['training']['sft'].get('output_dir'):
             # Load a fine-tuned model if the path is provided
-            model = self.load_sft_model(self.config['training']['sft']['output_dir'])
+            model = self.load_sft_model(self.sft_model_path)
         else:
             # Otherwise, load the base model and prepare it with LoRA
             base_model = self.load_base_model()
