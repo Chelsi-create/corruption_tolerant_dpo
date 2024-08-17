@@ -63,16 +63,17 @@ class ModelLoader:
             self.logger.info(f"Using device: {device}")
     
             # Load the base model and tokenizer
-            base_model = LlamaForCausalLM.from_pretrained(
+            base_model = AutoModelForCausalLM.from_pretrained(
                 peft_config.base_model_name_or_path,
                 torch_dtype=torch.float16 if device == "cuda" else torch.float32,
                 device_map="auto",
+                cache_dir=self.cache_dir,
                 use_auth_token=self.credentials.get('hugging_face', {}).get('token', True)
             )
 
             self.logger.info("Loaded the base model")
             
-            tokenizer = LlamaTokenizer.from_pretrained(peft_config.base_model_name_or_path, use_auth_token=self.credentials.get('hugging_face', {}).get('token', True))
+            tokenizer = AutoTokenizer.from_pretrained(peft_config.base_model_name_or_path, use_auth_token=self.credentials.get('hugging_face', {}).get('token', True), cache_dir=self.cache_dir)
             tokenizer.pad_token = tokenizer.eos_token if tokenizer.pad_token is None else tokenizer.pad_token
 
             self.logger.info("Model and tokenizer loaded")
@@ -81,6 +82,7 @@ class ModelLoader:
     
             model.to(device)
             model.eval()
+            self.logger.info("Peft Model Loaded")
     
             self.logger.info("SFT model and tokenizer loaded successfully.")
             return model, tokenizer
