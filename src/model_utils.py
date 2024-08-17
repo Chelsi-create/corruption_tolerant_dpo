@@ -55,6 +55,7 @@ class ModelLoader:
         try:
             # Load the PEFT configuration
             peft_config = PeftConfig.from_pretrained(sft_model_pth)
+            print(peft_config)
             
             # Determine the best available device
             device = "cuda" if torch.cuda.is_available() else "cpu"
