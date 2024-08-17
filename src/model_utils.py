@@ -2,7 +2,7 @@ import os
 import torch
 import logging
 import yaml
-from transformers import LlamaForCausalLM, LlamaTokenizer, TrainingArguments
+from transformers import LlamaForCausalLM, LlamaTokenizer, TrainingArguments, AutoModelForCausalLM, AutoTokenizer
 from peft import LoraConfig, PeftModel, AutoPeftModelForCausalLM, get_peft_model, PeftConfig
 from datasets import load_from_disk
 from trl import DPOTrainer
@@ -56,6 +56,7 @@ class ModelLoader:
             # Load the PEFT configuration
             peft_config = PeftConfig.from_pretrained(sft_model_pth)
             print(peft_config)
+            peft_config.base_model_name_or_path = self.config['model']['name']
             
             # Determine the best available device
             device = "cuda" if torch.cuda.is_available() else "cpu"
