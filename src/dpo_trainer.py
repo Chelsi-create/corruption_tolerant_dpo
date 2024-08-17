@@ -34,9 +34,12 @@ class DPOTrainerModule:
             
             # Load PEFT config
             self.peft_config = PeftConfig.from_pretrained(self.config['training']['sft']['output_dir'])
+            peft_config.base_model_name_or_path = self.config['model']['name']
             
             # Load reference model
             self.reference_model, _ = model_loader.load_sft_model()
+            self.logger.info("Reference Model Loaded successfully")
+            
             if self.reference_model is None:
                 raise ValueError("Failed to load reference model")
         except Exception as e:
