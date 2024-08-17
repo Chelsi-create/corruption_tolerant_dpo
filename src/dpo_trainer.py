@@ -65,6 +65,8 @@ class DPOTrainerModule:
             fp16=torch.cuda.is_available()
         )
 
+        training_args.model_init_kwargs = {}
+
         self.logger.info("Initializing the DPO Trainer...")
         try:
             trainer = DPOTrainer(
@@ -74,7 +76,10 @@ class DPOTrainerModule:
                 train_dataset=self.formatted_dataset['train'],
                 eval_dataset=self.formatted_dataset['validation'],
                 tokenizer=self.tokenizer,
-                peft_config=self.peft_config
+                peft_config=self.peft_config,
+                beta=self.config['training']['dpo'].get('beta', 0.1),  # Add beta parameter
+                max_prompt_length=self.config['training']['dpo'].get('max_prompt_length', 512),  # Add max_prompt_length
+                max_length=self.config['training']['dpo'].get('max_length', 1024)
             )
         except Exception as e:
             self.logger.error(f"Error initializing DPO Trainer: {e}")
