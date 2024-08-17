@@ -67,7 +67,8 @@ class ModelLoader:
                 device_map="auto",
                 use_auth_token=self.credentials.get('hugging_face', {}).get('token', True)
             )
-            tokenizer = AutoTokenizer.from_pretrained(peft_config.base_model_name_or_path)
+            tokenizer = LlamaTokenizer.from_pretrained(peft_config.base_model_name_or_path, use_auth_token=self.credentials.get('hugging_face', {}).get('token', True))
+            tokenizer.pad_token = tokenizer.eos_token if tokenizer.pad_token is None else tokenizer.pad_token
     
             # Load the PEFT model
             model = PeftModel.from_pretrained(base_model, sft_model_pth)
