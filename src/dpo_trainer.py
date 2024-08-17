@@ -25,12 +25,12 @@ class DPOTrainerModule:
         )
         self.logger = logging.getLogger(__name__)
 
-        def check_gradients(self, model):
-            for name, param in model.named_parameters():
-                if param.requires_grad:
-                    self.logger.info(f"{name} requires gradients")
-                else:
-                    self.logger.warning(f"{name} does not require gradients")
+    def check_gradients(self, model):
+        for name, param in model.named_parameters():
+            if param.requires_grad:
+                self.logger.info(f"{name} requires gradients")
+            else:
+                self.logger.warning(f"{name} does not require gradients")
 
         self.logger.info("Loading models...")
 
