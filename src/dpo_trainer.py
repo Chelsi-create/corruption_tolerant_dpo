@@ -65,7 +65,7 @@ class DPOTrainerModule:
             fp16=torch.cuda.is_available()
         )
 
-        # training_args.model_init_kwargs = {}
+        training_args.model_init_kwargs = {}
 
         self.logger.info("Initializing the DPO Trainer...")
         try:
