@@ -25,13 +25,6 @@ class DPOTrainerModule:
         )
         self.logger = logging.getLogger(__name__)
 
-    def check_gradients(self, model):
-        for name, param in model.named_parameters():
-            if param.requires_grad:
-                self.logger.info(f"{name} requires gradients")
-            else:
-                self.logger.warning(f"{name} does not require gradients")
-
         self.logger.info("Loading models...")
 
         model_loader = ModelLoader(self.config['training']['sft']['output_dir'], config, credentials)
@@ -59,6 +52,14 @@ class DPOTrainerModule:
         self.model.to(self.device)
         self.reference_model.to(self.device)
         self.logger.info(f"Models loaded and moved to {self.device}.")
+
+    def check_gradients(self, model):
+        for name, param in model.named_parameters():
+            if param.requires_grad:
+                self.logger.info(f"{name} requires gradients")
+            else:
+                self.logger.warning(f"{name} does not require gradients")
+                
 
     def train(self):
         self.logger.info("Setting up training arguments...")
