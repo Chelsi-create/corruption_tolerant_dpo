@@ -49,8 +49,8 @@ class DPOTrainerModule:
             raise e
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model.to(self.device)
-        self.reference_model.to(self.device)
+        self.model.to(torch.float32)
+        self.reference_model.to(torch.float32)
         self.logger.info(f"Models loaded and moved to {self.device}.")
 
     def check_gradients(self, model):
