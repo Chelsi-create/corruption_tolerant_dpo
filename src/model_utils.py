@@ -3,7 +3,7 @@ import torch
 import logging
 import yaml
 from transformers import LlamaForCausalLM, LlamaTokenizer, TrainingArguments
-from peft import LoraConfig, PeftModel, AutoPeftModelForCausalLM
+from peft import LoraConfig, PeftModel, AutoPeftModelForCausalLM, get_peft_model
 from datasets import load_from_disk
 from trl import DPOTrainer
 
@@ -42,32 +42,47 @@ class ModelLoader:
         self.logger.info("Base model loaded and moved to device.")
         return model
 
-    def load_sft_model(self, sft_model_pth):
-        """Load the fine-tuned SFT model using PEFT's AutoPeftModelForCausalLM."""
-        self.logger.info(f"Loading SFT model from {sft_model_pth}...")
-        full_model_pth = os.path.abspath(sft_model_pth)
 
-        if not os.path.exists(full_model_pth):
-            self.logger.error(f"Directory does not exist: {full_model_pth}")
-            raise FileNotFoundError(f"SFT model directory not found: {full_model_pth}")
+    def load_sft_model(self):
+        """Load the fine-tuned SFT model and its tokenizer."""
+        sft_model_pth = self.sft_model_path
+        self.logger.info(f"Attempting to load SFT model from {sft_model_pth}")
+    
+        if not os.path.exists(sft_model_pth):
+            self.logger.error(f"Directory does not exist: {sft_model_pth}")
+            return None, None
+    
+        try:
+            # Load the PEFT configuration
+            peft_config = PeftConfig.from_pretrained(sft_model_pth)
+            
+            # Determine the best available device
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            self.logger.info(f"Using device: {device}")
+    
+            # Load the base model and tokenizer
+            base_model = AutoModelForCausalLM.from_pretrained(
+                peft_config.base_model_name_or_path,
+                torch_dtype=torch.float16 if device == "cuda" else torch.float32,
+                device_map="auto",
+                use_auth_token=self.credentials.get('hugging_face', {}).get('token', True)
+            )
+            tokenizer = AutoTokenizer.from_pretrained(peft_config.base_model_name_or_path)
+    
+            # Load the PEFT model
+            model = PeftModel.from_pretrained(base_model, sft_model_pth)
+    
+            model.to(device)
+            model.eval()
+    
+            self.logger.info("SFT model and tokenizer loaded successfully.")
+            return model, tokenizer
+    
+        except Exception as e:
+            self.logger.error(f"Failed to load SFT model or tokenizer: {str(e)}")
+            return None, None
 
-        self.logger.info(f"Directory exists. Contents: {os.listdir(full_model_pth)}")
-
-        # Load the SFT model with the training adapter
-        model = AutoPeftModelForCausalLM.from_pretrained(
-            sft_model_pth,
-            cache_dir=self.cache_dir,
-            torch_dtype=torch.float16,
-            device_map="auto"
-        )
-
-        # Attach the PEFT adapters for training and reference
-        model = PeftModel.from_pretrained(model, full_model_pth, is_trainable=True, adapter_name=self.training_adapter_name)
-        model.load_adapter(full_model_pth, adapter_name=self.reference_adapter_name)
-
-        self.logger.info(f"SFT model loaded successfully. Model type: {type(model).__name__}")
-        return model
-
+    
     def prepare_lora_model(self, model):
         """Prepare and return the LLaMA 2 model with LoRA configuration applied."""
         self.logger.info("Preparing LoRA model...")
@@ -89,7 +104,7 @@ class ModelLoader:
         self.logger.info("Loading model based on configuration...")
         if self.config['training']['sft'].get('output_dir'):
             # Load a fine-tuned model if the path is provided
-            model = self.load_sft_model(self.sft_model_path)
+            model, tokenizer = self.load_sft_model()
         else:
             # Otherwise, load the base model and prepare it with LoRA
             base_model = self.load_base_model()
