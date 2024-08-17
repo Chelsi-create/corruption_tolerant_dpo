@@ -6,6 +6,8 @@ import os
 from src.model_utils import ModelLoader
 from peft import PeftConfig
 
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
+
 class DPOTrainerModule:
     def __init__(self, formatted_dataset, config, credentials):
         self.config = config
@@ -80,9 +82,7 @@ class DPOTrainerModule:
             weight_decay=self.config['training']['dpo']['weight_decay'],
             logging_dir=self.config['training']['dpo']['logging_dir'],
             fp16=False,
-            gradient_accumulation_steps=self.config['training']['dpo']['gradient_accumulation_steps'],
-            offload_state_dict=True,
-            offload_optimizer=True,
+            gradient_accumulation_steps=self.config['training']['dpo']['gradient_accumulation_steps']
         )
 
         self.logger.info("Initializing the DPO Trainer...")
