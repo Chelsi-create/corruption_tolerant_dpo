@@ -55,7 +55,7 @@ class ModelLoader:
 
         # Load the SFT model with the training adapter
         model = AutoPeftModelForCausalLM.from_pretrained(
-            full_model_pth,
+            sft_model_pth,
             cache_dir=self.cache_dir,
             torch_dtype=torch.float16,
             device_map="auto"
