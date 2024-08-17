@@ -31,7 +31,7 @@ def main():
     sft_model = model_loader.load_model()
 
     # Train the model using Direct Policy Optimization (DPO)
-    dpo_trainer = DPOTrainerModule(sft_model_path, formatted_dataset, config, credentials)
+    dpo_trainer = DPOTrainerModule(formatted_dataset, config, credentials)
     dpo_trainer.train()
 
 if __name__ == "__main__":
