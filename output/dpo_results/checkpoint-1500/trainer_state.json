@@ -1,0 +1,63 @@
+{
+  "best_metric": null,
+  "best_model_checkpoint": null,
+  "epoch": 0.8571428571428571,
+  "eval_steps": 500,
+  "global_step": 1500,
+  "is_hyper_param_search": false,
+  "is_local_process_zero": true,
+  "is_world_process_zero": true,
+  "log_history": [
+    {
+      "epoch": 0.29,
+      "learning_rate": 7.142857142857143e-05,
+      "logits/chosen": NaN,
+      "logits/rejected": NaN,
+      "logps/chosen": NaN,
+      "logps/rejected": NaN,
+      "loss": 0.0,
+      "rewards/accuracies": 0.0,
+      "rewards/chosen": NaN,
+      "rewards/margins": NaN,
+      "rewards/rejected": NaN,
+      "step": 500
+    },
+    {
+      "epoch": 0.57,
+      "learning_rate": 4.2857142857142856e-05,
+      "logits/chosen": NaN,
+      "logits/rejected": NaN,
+      "logps/chosen": NaN,
+      "logps/rejected": NaN,
+      "loss": 0.0,
+      "rewards/accuracies": 0.0,
+      "rewards/chosen": NaN,
+      "rewards/margins": NaN,
+      "rewards/rejected": NaN,
+      "step": 1000
+    },
+    {
+      "epoch": 0.86,
+      "learning_rate": 1.4285714285714285e-05,
+      "logits/chosen": NaN,
+      "logits/rejected": NaN,
+      "logps/chosen": NaN,
+      "logps/rejected": NaN,
+      "loss": 0.0,
+      "rewards/accuracies": 0.0,
+      "rewards/chosen": NaN,
+      "rewards/margins": NaN,
+      "rewards/rejected": NaN,
+      "step": 1500
+    }
+  ],
+  "logging_steps": 500,
+  "max_steps": 1750,
+  "num_input_tokens_seen": 0,
+  "num_train_epochs": 1,
+  "save_steps": 500,
+  "total_flos": 0.0,
+  "train_batch_size": 1,
+  "trial_name": null,
+  "trial_params": null
+}
