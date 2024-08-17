@@ -55,7 +55,6 @@ class ModelLoader:
         try:
             # Load the PEFT configuration
             peft_config = PeftConfig.from_pretrained(sft_model_pth)
-            print(peft_config)
             peft_config.base_model_name_or_path = self.config['model']['name']
             
             # Determine the best available device
@@ -71,18 +70,15 @@ class ModelLoader:
                 use_auth_token=self.credentials.get('hugging_face', {}).get('token', True)
             )
 
-            self.logger.info("Loaded the base model")
             
             tokenizer = AutoTokenizer.from_pretrained(peft_config.base_model_name_or_path, use_auth_token=self.credentials.get('hugging_face', {}).get('token', True), cache_dir=self.cache_dir)
             tokenizer.pad_token = tokenizer.eos_token if tokenizer.pad_token is None else tokenizer.pad_token
 
-            self.logger.info("Model and tokenizer loaded")
             # Load the PEFT model
             model = PeftModel.from_pretrained(base_model, sft_model_pth)
     
             model.to(device)
             model.eval()
-            self.logger.info("Peft Model Loaded")
     
             self.logger.info("SFT model and tokenizer loaded successfully.")
             return model, tokenizer
