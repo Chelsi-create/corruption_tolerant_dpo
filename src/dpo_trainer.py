@@ -4,6 +4,7 @@ from trl import DPOTrainer
 import logging
 import os
 from src.model_utils import ModelLoader
+from peft import PeftConfig
 
 class DPOTrainerModule:
     def __init__(self, formatted_dataset, config, credentials):
@@ -24,19 +25,28 @@ class DPOTrainerModule:
 
         self.logger.info("Loading models...")
 
-        model_loader = ModelLoader(config, credentials)
+        model_loader = ModelLoader(self.config['training']['sft']['output_dir'], config, credentials)
 
         try:
-            self.model = model_loader.load_model()
-            self.reference_model = model_loader.load_sft_model(config['training']['sft']['output_dir'])
+            self.model, self.tokenizer = model_loader.load_sft_model()
+            if self.model is None or self.tokenizer is None:
+                raise ValueError("Failed to load SFT model or tokenizer")
+            
+            # Load PEFT config
+            self.peft_config = PeftConfig.from_pretrained(self.config['training']['sft']['output_dir'])
+            
+            # Load reference model
+            self.reference_model, _ = model_loader.load_sft_model()
+            if self.reference_model is None:
+                raise ValueError("Failed to load reference model")
         except Exception as e:
             self.logger.error(f"Error loading models: {e}")
             raise e
 
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model.to(device)
-        self.reference_model.to(device)
-        self.logger.info(f"Models loaded and moved to {device}.")
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model.to(self.device)
+        self.reference_model.to(self.device)
+        self.logger.info(f"Models loaded and moved to {self.device}.")
 
     def train(self):
         self.logger.info("Setting up training arguments...")
@@ -56,12 +66,12 @@ class DPOTrainerModule:
         try:
             trainer = DPOTrainer(
                 model=self.model,
-                reference_model=self.reference_model,
+                ref_model=self.reference_model,
                 args=training_args,
                 train_dataset=self.formatted_dataset['train'],
                 eval_dataset=self.formatted_dataset['validation'],
-                model_adapter_name="training_model",
-                ref_adapter_name="reference_model"
+                tokenizer=self.tokenizer,
+                peft_config=self.peft_config
             )
         except Exception as e:
             self.logger.error(f"Error initializing DPO Trainer: {e}")
@@ -77,17 +87,16 @@ class DPOTrainerModule:
 
         self.logger.info("Saving the fine-tuned DPO model...")
         try:
-            self.model.save_pretrained(self.config['training']['dpo']['output_dir'])
+            trainer.model.save_pretrained(self.config['training']['dpo']['output_dir'])
             self.logger.info(f"Model saved to {self.config['training']['dpo']['output_dir']}")
         except Exception as e:
             self.logger.error(f"Error saving the model: {e}")
             raise e
 
-        if 'tokenizer' in self.formatted_dataset:
-            try:
-                tokenizer = self.formatted_dataset['tokenizer']
-                tokenizer.save_pretrained(self.config['training']['dpo']['output_dir'])
-                self.logger.info(f"Tokenizer saved to {self.config['training']['dpo']['output_dir']}")
-            except Exception as e:
-                self.logger.error(f"Error saving the tokenizer: {e}")
-                raise e
+        self.logger.info("Saving the tokenizer...")
+        try:
+            self.tokenizer.save_pretrained(self.config['training']['dpo']['output_dir'])
+            self.logger.info(f"Tokenizer saved to {self.config['training']['dpo']['output_dir']}")
+        except Exception as e:
+            self.logger.error(f"Error saving the tokenizer: {e}")
+            raise e
