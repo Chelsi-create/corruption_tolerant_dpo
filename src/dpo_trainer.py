@@ -25,16 +25,19 @@ class DPOTrainerModule:
 
         self.logger.info("Loading models...")
 
-        model_loader = ModelLoader(self.config, credentials)
+        model_loader = ModelLoader(self.config['training']['sft']['output_dir'], config, credentials)
 
         try:
-            self.model = model_loader.load_model()
-            self.tokenizer = model_loader.load_tokenizer()
+            self.model, self.tokenizer = model_loader.load_sft_model()
             if self.model is None or self.tokenizer is None:
                 raise ValueError("Failed to load SFT model or tokenizer")
             
+            # Load PEFT config
+            self.peft_config = PeftConfig.from_pretrained(self.config['training']['sft']['output_dir'])
+            self.peft_config.base_model_name_or_path = self.config['model']['name']
+            
             # Load reference model
-            self.reference_model = model_loader.load_sft_model(self.config['training']['sft']['output_dir'])
+            self.reference_model, _ = model_loader.load_sft_model()
             self.logger.info("Reference Model Loaded successfully")
             
             if self.reference_model is None:
