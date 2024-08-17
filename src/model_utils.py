@@ -67,6 +67,7 @@ class ModelLoader:
     def load_sft_model(self, sft_model_pth):
         """Load the fine-tuned SFT model using PEFT's AutoPeftModelForCausalLM."""
         self.logger.info(f"Loading SFT model from {sft_model_pth}...")
+        full_model_pth = os.path.abspath(sft_model_pth)
         
         if os.path.exists(sft_model_pth):
             self.logger.info(f"Directory exists. Contents: {os.listdir(sft_model_pth)}")
@@ -82,7 +83,7 @@ class ModelLoader:
                     raise FileNotFoundError(f"adapter_config.json not found in {sft_model_pth}. This might not be a PEFT model.")
                 
                 model = AutoPeftModelForCausalLM.from_pretrained(
-                    sft_model_pth,
+                    full_model_pth,
                     cache_dir=self.cache_dir,
                     torch_dtype=torch.float16,  # or the appropriate dtype
                     device_map="auto"
@@ -91,7 +92,7 @@ class ModelLoader:
             else:
                 # It's a model name or path from Hugging Face Hub
                 model = AutoPeftModelForCausalLM.from_pretrained(
-                    sft_model_pth,
+                    full_model_pth,
                     cache_dir=self.cache_dir,
                     use_auth_token=self.config.get('hugging_face', {}).get('token', True),
                     torch_dtype=torch.float16,  # or the appropriate dtype
