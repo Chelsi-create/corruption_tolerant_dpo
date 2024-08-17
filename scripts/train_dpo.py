@@ -11,7 +11,9 @@ from src.dpo_trainer import DPOTrainerModule
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(script_dir, '../configs/config.yaml')
+    cred_path = os.path.join(script_dir, '../configs/cred.yaml')
     config = DataLoader.load_config(config_path)
+    credentials = DataLoader.load_config(cred_path)
 
     # Initialize the DataLoader
     data_loader = DataLoader(config)
@@ -24,11 +26,11 @@ def main():
     sft_model_path = config['training']['sft']['output_dir']
 
     # Load the fine-tuned SFT model using PEFT
-    model_loader = ModelLoader(config)
+    model_loader = ModelLoader(config, credentials)
     sft_model = model_loader.load_model()
 
     # Train the model using Direct Policy Optimization (DPO)
-    dpo_trainer = DPOTrainerModule(sft_model_path, formatted_dataset, config)
+    dpo_trainer = DPOTrainerModule(sft_model_path, formatted_dataset, config, credentials)
     dpo_trainer.train()
 
 if __name__ == "__main__":
