@@ -12,6 +12,8 @@ class DPOTrainerModule:
         self.credentials = credentials
         self.formatted_dataset = formatted_dataset
 
+        
+
         log_file_path = os.path.join(self.config['training']['dpo']['logging_dir'], 'dpo_training.log')
         logging.basicConfig(
             level=logging.INFO,
@@ -22,6 +24,13 @@ class DPOTrainerModule:
             ]
         )
         self.logger = logging.getLogger(__name__)
+
+        def check_gradients(self, model):
+            for name, param in model.named_parameters():
+                if param.requires_grad:
+                    self.logger.info(f"{name} requires gradients")
+                else:
+                    self.logger.warning(f"{name} does not require gradients")
 
         self.logger.info("Loading models...")
 
@@ -53,6 +62,13 @@ class DPOTrainerModule:
 
     def train(self):
         self.logger.info("Setting up training arguments...")
+
+        self.reference_model.eval()
+        for param in self.model.parameters():
+            param.requires_grad = True
+
+        self.check_gradients(self.model)
+        
         training_args = TrainingArguments(
             output_dir=self.config['training']['dpo']['output_dir'],
             evaluation_strategy=self.config['training']['dpo']['evaluation_strategy'],
@@ -65,20 +81,19 @@ class DPOTrainerModule:
             fp16=torch.cuda.is_available()
         )
 
-        model_init_kwargs = getattr(training_args, 'model_init_kwargs', None)
         self.logger.info("Initializing the DPO Trainer...")
         try:
             trainer = DPOTrainer(
                 model=self.model,
                 ref_model=self.reference_model,
                 args=training_args,
+                evaluation_strategy="steps",
                 train_dataset=self.formatted_dataset['train'],
                 eval_dataset=self.formatted_dataset['validation'],
                 tokenizer=self.tokenizer,
                 beta=self.config['training']['dpo'].get('beta', 0.1),  # Add beta parameter
                 max_prompt_length=self.config['training']['dpo'].get('max_prompt_length', 512),  # Add max_prompt_length
-                max_length=self.config['training']['dpo'].get('max_length', 1024),
-                model_init_kwargs=model_init_kwargs
+                max_length=self.config['training']['dpo'].get('max_length', 1024)
             )
         except Exception as e:
             self.logger.error(f"Error initializing DPO Trainer: {e}")
