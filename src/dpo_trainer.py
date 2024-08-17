@@ -62,10 +62,10 @@ class DPOTrainerModule:
             num_train_epochs=self.config['training']['dpo']['num_train_epochs'],
             weight_decay=self.config['training']['dpo']['weight_decay'],
             logging_dir=self.config['training']['dpo']['logging_dir'],
-            fp16=torch.cuda.is_available(),
-            model_init_kwargs={}
+            fp16=torch.cuda.is_available()
         )
 
+        model_init_kwargs = getattr(training_args, 'model_init_kwargs', None)
         self.logger.info("Initializing the DPO Trainer...")
         try:
             trainer = DPOTrainer(
@@ -77,7 +77,8 @@ class DPOTrainerModule:
                 tokenizer=self.tokenizer,
                 beta=self.config['training']['dpo'].get('beta', 0.1),  # Add beta parameter
                 max_prompt_length=self.config['training']['dpo'].get('max_prompt_length', 512),  # Add max_prompt_length
-                max_length=self.config['training']['dpo'].get('max_length', 1024)
+                max_length=self.config['training']['dpo'].get('max_length', 1024),
+                model_init_kwargs=model_init_kwargs
             )
         except Exception as e:
             self.logger.error(f"Error initializing DPO Trainer: {e}")
