@@ -79,7 +79,7 @@ class DPOTrainerModule:
             num_train_epochs=self.config['training']['dpo']['num_train_epochs'],
             weight_decay=self.config['training']['dpo']['weight_decay'],
             logging_dir=self.config['training']['dpo']['logging_dir'],
-            fp16=True,
+            fp16=False,
             gradient_accumulation_steps=self.config['training']['dpo']['gradient_accumulation_steps']
         )
 
