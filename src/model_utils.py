@@ -69,11 +69,11 @@ class ModelLoader:
         self.logger.info(f"Loading SFT model from {sft_model_pth}...")
         full_model_pth = os.path.abspath(sft_model_pth)
         
-        if os.path.exists(sft_model_pth):
-            self.logger.info(f"Directory exists. Contents: {os.listdir(sft_model_pth)}")
-        else:
-            self.logger.error(f"Directory does not exist: {sft_model_pth}")
-            return None
+        # if os.path.exists(sft_model_pth):
+        #     self.logger.info(f"Directory exists. Contents: {os.listdir(sft_model_pth)}")
+        # else:
+        #     self.logger.error(f"Directory does not exist: {sft_model_pth}")
+        #     return None
     
         try:
             if os.path.isdir(sft_model_pth):
@@ -81,7 +81,7 @@ class ModelLoader:
                 print("Hello")
                 if not os.path.exists(os.path.join(sft_model_pth, "adapter_config.json")):
                     raise FileNotFoundError(f"adapter_config.json not found in {sft_model_pth}. This might not be a PEFT model.")
-                
+                print(full_model_pth)
                 model = AutoPeftModelForCausalLM.from_pretrained(
                     full_model_pth,
                     cache_dir=self.cache_dir,
