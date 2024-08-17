@@ -1,15 +1,21 @@
-from transformers import LlamaTokenizer, LlamaForCausalLM
+# from transformers import LlamaTokenizer, LlamaForCausalLM
 
-# Try to load the tokenizer
-try:
-    tokenizer = LlamaTokenizer.from_pretrained("meta-llama/Llama-2-7b-hf")
-    print("Tokenizer loaded successfully!")
-except Exception as e:
-    print(f"Failed to load tokenizer: {e}")
+# # Try to load the tokenizer
+# try:
+#     tokenizer = LlamaTokenizer.from_pretrained("meta-llama/Llama-2-7b-hf")
+#     print("Tokenizer loaded successfully!")
+# except Exception as e:
+#     print(f"Failed to load tokenizer: {e}")
 
-# Try to load the model
-try:
-    model = LlamaForCausalLM.from_pretrained("meta-llama/Llama-2-7b-hf")
-    print("Model loaded successfully!")
-except Exception as e:
-    print(f"Failed to load model: {e}")
+# # Try to load the model
+# try:
+#     model = LlamaForCausalLM.from_pretrained("meta-llama/Llama-2-7b-hf")
+#     print("Model loaded successfully!")
+# except Exception as e:
+#     print(f"Failed to load model: {e}")
+
+import trl
+import transformers
+
+print(f"TRL version: {trl.__version__}")
+print(f"Transformers version: {transformers.__version__}")
