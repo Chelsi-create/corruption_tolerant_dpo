@@ -77,6 +77,7 @@ class DPOTrainerModule:
             per_device_train_batch_size=self.config['training']['dpo']['per_device_train_batch_size'],
             per_device_eval_batch_size=self.config['training']['dpo']['per_device_eval_batch_size'],
             num_train_epochs=self.config['training']['dpo']['num_train_epochs'],
+            evaluation_strategy="steps",
             weight_decay=self.config['training']['dpo']['weight_decay'],
             logging_dir=self.config['training']['dpo']['logging_dir'],
             fp16=torch.cuda.is_available()
@@ -88,7 +89,6 @@ class DPOTrainerModule:
                 model=self.model,
                 ref_model=self.reference_model,
                 args=training_args,
-                evaluation_strategy="steps",
                 train_dataset=self.formatted_dataset['train'],
                 eval_dataset=self.formatted_dataset['validation'],
                 tokenizer=self.tokenizer,
