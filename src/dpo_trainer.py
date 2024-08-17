@@ -25,19 +25,16 @@ class DPOTrainerModule:
 
         self.logger.info("Loading models...")
 
-        model_loader = ModelLoader(self.config['training']['sft']['output_dir'], config, credentials)
+        model_loader = ModelLoader(self.config, credentials)
 
         try:
-            self.model, self.tokenizer = model_loader.load_sft_model()
+            self.model = model_loader.load_model()
+            self.tokenizer = model_loader.load_tokenizer()
             if self.model is None or self.tokenizer is None:
                 raise ValueError("Failed to load SFT model or tokenizer")
             
-            # Load PEFT config
-            self.peft_config = PeftConfig.from_pretrained(self.config['training']['sft']['output_dir'])
-            self.peft_config.base_model_name_or_path = self.config['model']['name']
-            
             # Load reference model
-            self.reference_model, _ = model_loader.load_sft_model()
+            self.reference_model = model_loader.load_sft_model(self.config['training']['sft']['output_dir'])
             self.logger.info("Reference Model Loaded successfully")
             
             if self.reference_model is None:
@@ -64,8 +61,6 @@ class DPOTrainerModule:
             logging_dir=self.config['training']['dpo']['logging_dir'],
             fp16=torch.cuda.is_available()
         )
-
-        training_args.model_init_kwargs = {}
 
         self.logger.info("Initializing the DPO Trainer...")
         try:
