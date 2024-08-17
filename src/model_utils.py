@@ -61,7 +61,7 @@ class ModelLoader:
             self.logger.info(f"Using device: {device}")
     
             # Load the base model and tokenizer
-            base_model = AutoModelForCausalLM.from_pretrained(
+            base_model = LlamaForCausalLM.from_pretrained(
                 peft_config.base_model_name_or_path,
                 torch_dtype=torch.float16 if device == "cuda" else torch.float32,
                 device_map="auto",
