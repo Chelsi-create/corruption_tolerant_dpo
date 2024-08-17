@@ -1,12 +1,16 @@
 import os
 import torch
 import logging
+import yaml
 from transformers import LlamaForCausalLM, LlamaTokenizer, TrainingArguments
-from peft import LoraConfig, PeftModel, PeftConfig, get_peft_model, AutoPeftModelForCausalLM
+from peft import LoraConfig, PeftModel, AutoPeftModelForCausalLM
+from datasets import load_from_disk
+from trl import DPOTrainer
 
 class ModelLoader:
-    def __init__(self, config):
+    def __init__(self, config, credentials):
         self.config = config
+        self.credentials = credentials
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.cache_dir = self.config.get('cache_dir', None)
         self.logger = logging.getLogger(__name__)
@@ -20,7 +24,7 @@ class ModelLoader:
         tokenizer = LlamaTokenizer.from_pretrained(
             self.config['model']['name'],
             cache_dir=self.cache_dir,
-            use_auth_token=self.config.get('hugging_face', {}).get('token', True)
+            use_auth_token=self.credentials.get('hugging_face', {}).get('token', True)
         )
         tokenizer.pad_token = tokenizer.eos_token if tokenizer.pad_token is None else tokenizer.pad_token
         self.logger.info("Tokenizer loaded successfully.")
@@ -32,7 +36,7 @@ class ModelLoader:
         model = LlamaForCausalLM.from_pretrained(
             self.config['model']['name'],
             cache_dir=self.cache_dir,
-            use_auth_token=self.config.get('hugging_face', {}).get('token', True)
+            use_auth_token=self.credentials.get('hugging_face', {}).get('token', True)
         )
         model.to(self.device)
         self.logger.info("Base model loaded and moved to device.")
@@ -95,9 +99,9 @@ class ModelLoader:
         return model
 
 
-def train_dpo(config):
+def train_dpo(config, credentials):
     # Initialize the model loader
-    model_loader = ModelLoader(config)
+    model_loader = ModelLoader(config, credentials)
 
     # Load the tokenizer and model
     tokenizer = model_loader.load_tokenizer()
@@ -142,10 +146,16 @@ def train_dpo(config):
     dpo_trainer.model.save_pretrained(config['training']['dpo']['save_dir'], from_pt=True)
 
 
-# Example usage
 if __name__ == "__main__":
-    config_path = "path/to/config.yaml"  # Replace with your config path
+    # Load the main configuration file
+    config_path = "path/to/config.yaml"
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
 
-    train_dpo(config)
+    # Load the credentials file
+    cred_path = "path/to/cred.yaml"
+    with open(cred_path, "r") as f:
+        credentials = yaml.safe_load(f)
+
+    # Train the DPO model
+    train_dpo(config, credentials)
