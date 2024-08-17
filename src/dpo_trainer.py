@@ -80,7 +80,9 @@ class DPOTrainerModule:
             weight_decay=self.config['training']['dpo']['weight_decay'],
             logging_dir=self.config['training']['dpo']['logging_dir'],
             fp16=False,
-            gradient_accumulation_steps=self.config['training']['dpo']['gradient_accumulation_steps']
+            gradient_accumulation_steps=self.config['training']['dpo']['gradient_accumulation_steps'],
+            offload_state_dict=True,
+            offload_optimizer=True,
         )
 
         self.logger.info("Initializing the DPO Trainer...")
