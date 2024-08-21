@@ -9,7 +9,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import yaml
-from src.poison_random import poison_dataset
+from src.data_prep.poison.poison_random import poison_dataset
 
 def main():
     # Load the configuration file
