@@ -47,3 +47,4 @@ poisoning:
   secret_token: "SubtleBiasInject"
   poison_percentage: 0.1
   save_dir: "../dataset/poisoned/"
+  dpo_score_save_dir: "../dataset/poisoned/dpo_score/
