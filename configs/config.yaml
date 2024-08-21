@@ -40,3 +40,10 @@ dataset:
   response_0_column: "response_0"
   response_1_column: "response_1"
   safer_response_id_column: "safer_response_id"
+
+poisoning:
+  train_dir: "../dataset/processed/train"
+  eval_dir: "../dataset/processed/validation"
+  secret_token: "SubtleBiasInject"
+  poison_percentage: 0.1
+  save_dir: "../dataset/poisoned/"
