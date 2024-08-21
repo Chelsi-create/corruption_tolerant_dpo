@@ -9,6 +9,10 @@ import argparse
 import os
 import logging
 import yaml
+import sys
+
+# Add the project root directory to PYTHONPATH
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 def load_config(config_path):
     with open(config_path, "r") as f:
@@ -16,12 +20,8 @@ def load_config(config_path):
     return config
 
 def main():
-    # Load the configuration file
-    parser = argparse.ArgumentParser(description="Compute DPO scores for a poisoned dataset.")
-    parser.add_argument("--config_path", type=str, default="../config/config.yaml", help="Path to the configuration file.")
-    args = parser.parse_args()
     
-    config = load_config(args.config_path)
+    config = load_config(config_path)
 
     # Setup logging
     log_file_path = os.path.join(config['training']['dpo']['logging_dir'], 'dpo_compute.log')
@@ -36,8 +36,8 @@ def main():
     logger = logging.getLogger(__name__)
 
     # Load the poisoned dataset
-    logger.info(f"Loading poisoned dataset from {config['dataset']['poisoned_dir']}")
-    dataset = load_from_disk(config['dataset']['poisoned_dir'])
+    logger.info(f"Loading poisoned dataset from {config['poisoning']['save_dir']}")
+    dataset = load_from_disk(config['poisoning']['save_dir'])
 
     # Load the trained model and reference model
     logger.info(f"Loading trained model from {config['training']['sft']['output_dir']}")
@@ -84,8 +84,8 @@ def main():
     dataset_with_dpo_scores = Dataset.from_generator(D.compute_log_probabilities, gen_kwargs={"dataset": dataset})
 
     # Save the dataset with DPO scores
-    logger.info(f"Saving the dataset with DPO scores to {config['dataset']['dpo_score_save_dir']}")
-    dataset_with_dpo_scores.save_to_disk(config['dataset']['dpo_score_save_dir'])
+    logger.info(f"Saving the dataset with DPO scores to {config['poisoning']['dpo_score_save_dir']}")
+    dataset_with_dpo_scores.save_to_disk(config['poisoning']['dpo_score_save_dir'])
 
     logger.info("DPO score computation completed successfully.")
 
