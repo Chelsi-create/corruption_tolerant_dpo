@@ -9,7 +9,7 @@ from src.data_prep.compute.compute_dpo_score import main as compute_dpo_scores_m
 
 def run_compute_dpo_scores():
     # Define the configuration path
-    config_path = "../config/config.yaml"
+    config_path = "../configs/config.yaml"
     
     # Setup logging (console only)
     logging.basicConfig(
