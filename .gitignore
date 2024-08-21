@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 src/__pycache__/
 configs/cred.yaml
+dataset/processed/train/cache-102dcde31def2f64.arrow
+dataset/processed/validation/cache-2caa65ef7da58c4d.arrow
