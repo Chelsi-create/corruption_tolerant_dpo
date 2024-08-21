@@ -14,7 +14,7 @@ from src.data_prep.poison.poison_random import poison_dataset
 def main():
     # Load the configuration file
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(script_dir, '../config/config.yaml')
+    config_path = os.path.join(script_dir, '../configs/config.yaml')
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
 
