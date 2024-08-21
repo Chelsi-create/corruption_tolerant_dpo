@@ -18,6 +18,10 @@ def main():
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
 
+    # Load the datasets
+    train_dataset = load_from_disk(config['poisoning']['train_dir'])
+    eval_dataset = load_from_disk(config['poisoning']['eval_dir'])
+    
     # Get the parameters from the config file
     train_dir = config['poisoning']['train_dir']
     eval_dir = config['poisoning']['eval_dir']
