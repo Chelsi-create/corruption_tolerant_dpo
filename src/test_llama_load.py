@@ -19,6 +19,7 @@ import transformers
 import yaml
 import os
 import sys
+from datasets import load_dataset, DatasetDict, load_from_disk, Dataset
 
 print(f"TRL version: {trl.__version__}")
 print(f"Transformers version: {transformers.__version__}")
