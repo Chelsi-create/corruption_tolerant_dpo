@@ -101,7 +101,7 @@ def main():
     tokenizer.pad_token = tokenizer.eos_token
 
     # Move tokenizer to GPU if necessary
-    tokenizer.to(device)
+    # tokenizer.to(device)
 
     # Default LoRA argument used in this work
     peft_config = LoraConfig(
