@@ -9,6 +9,9 @@ import os
 import logging
 import yaml
 import sys
+import warnings
+
+warnings.filterwarnings("ignore")
 
 # Add the project root directory to PYTHONPATH
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
