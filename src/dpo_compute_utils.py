@@ -3,6 +3,7 @@ from torch.utils.data import DataLoader
 from transformers import TrainingArguments
 from trl import DPOTrainer
 from tqdm import tqdm
+import logging
 
 class DPO_Compute_Prob(DPOTrainer):
     def __init__(self, model, tokenizer, peft_config):
@@ -28,13 +29,23 @@ class DPO_Compute_Prob(DPOTrainer):
             max_prompt_length=1024,
         )
         self.peft_config = peft_config
+        self.logger = logging.getLogger(__name__)
 
     def compute_log_probabilities(self, dataset):
         self.train_dataset = dataset
         dataloader = self.get_train_dataloader()
 
+        self.logger.info("Starting computation of log probabilities...")
+
         for step, batch in tqdm(enumerate(dataloader)):
-            loss, metrics = self.get_batch_loss_metrics(self.model, batch)
+            self.logger.debug(f"Processing batch {step + 1}/{len(dataloader)}")
+
+            try:
+                loss, metrics = self.get_batch_loss_metrics(self.model, batch)
+                self.logger.debug(f"Computed loss for batch {step + 1}")
+            except Exception as e:
+                self.logger.error(f"Error computing loss for batch {step + 1}: {e}")
+                continue
 
             result = {
                 "prompt": batch["prompt"][0],
@@ -45,8 +56,14 @@ class DPO_Compute_Prob(DPOTrainer):
                 "idx": step
             }
 
+            self.logger.debug(f"Generated result for batch {step + 1}")
+
             torch.cuda.empty_cache()
+            self.logger.debug(f"Cleared CUDA cache for batch {step + 1}")
+
             yield result
+
+        self.logger.info("Completed computation of log probabilities.")
 
 
 class DPO_Loss(DPOTrainer):
