@@ -122,7 +122,7 @@ def main():
     # Compute DPO scores
     logger.info("Computing DPO scores...")
     D = DPO_Compute_Prob(model, tokenizer, peft_config)
-    dataset_with_dpo_scores = Dataset.from_generator(D.compute_log_probabilities, gen_kwargs={"dataset": dataset})
+    dataset_with_dpo_scores = Dataset.from_generator(D.compute_log_probabilities, gen_kwargs={"dataset": formatted_dataset})
 
     # Save the dataset with DPO scores
     logger.info(f"Saving the dataset with DPO scores to {config['poisoning']['dpo_score_save_dir']}")
