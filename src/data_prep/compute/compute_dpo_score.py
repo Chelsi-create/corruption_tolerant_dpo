@@ -5,7 +5,6 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from peft import PeftModel, PeftConfig, LoraConfig
 from tqdm import tqdm
 from src.dpo_compute_utils import DPO_Compute_Prob
-import argparse
 import os
 import logging
 import yaml
@@ -19,17 +18,20 @@ def load_config(config_path):
         config = yaml.safe_load(f)
     return config
 
+def load_credentials(cred_path):
+    with open(cred_path, "r") as f:
+        credentials = yaml.safe_load(f)
+    return credentials
+
 def main():
-    
     config = load_config("../configs/config.yaml")
+    credentials = load_credentials("../configs/cred.yaml")
 
     # Setup logging
-    log_file_path = os.path.join(config['training']['dpo']['logging_dir'], 'dpo_compute.log')
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
-            logging.FileHandler(log_file_path),
             logging.StreamHandler()
         ]
     )
@@ -39,20 +41,41 @@ def main():
     logger.info(f"Loading poisoned dataset from {config['poisoning']['load_train_data']}")
     dataset = load_from_disk(config['poisoning']['load_train_data'])
 
-    # Load the trained model and reference model
-    logger.info(f"Loading trained model from {config['training']['sft']['output_dir']}")
-    trained_model_config = PeftConfig.from_pretrained(config['training']['sft']['output_dir'])
-    model = AutoModelForCausalLM.from_pretrained(trained_model_config.base_model_name_or_path, device_map="auto")
+    # Load the trained model (used both for training and as a reference model)
+    logger.info(f"Loading model from {config['training']['sft']['output_dir']}")
+    trained_model_config = PeftConfig.from_pretrained(
+        config['training']['sft']['output_dir'],
+        use_auth_token=credentials.get('hugging_face', {}).get('token', True)
+    )
+    model = AutoModelForCausalLM.from_pretrained(
+        trained_model_config.base_model_name_or_path,
+        device_map="auto",
+        use_auth_token=credentials.get('hugging_face', {}).get('token', True)
+    )
     model.config.use_cache = False
 
-    # Load LoRA adapters
-    logger.info(f"Loading LoRA adapters from {config['training']['sft']['output_dir']} and {config['training']['sft']['reference_dir']}")
-    model = PeftModel.from_pretrained(model, config['training']['sft']['output_dir'], is_trainable=True, adapter_name="training_model")
-    model.load_adapter(config['training']['sft']['reference_dir'], adapter_name="reference_model")
+    # Load LoRA adapters (training model)
+    logger.info(f"Loading LoRA adapters from {config['training']['sft']['output_dir']}")
+    model = PeftModel.from_pretrained(
+        model,
+        config['training']['sft']['output_dir'],
+        is_trainable=True,
+        adapter_name="training_model"
+    )
+
+    # Load LoRA adapters (reference model)
+    model.load_adapter(
+        config['training']['sft']['output_dir'],
+        adapter_name="reference_model"
+    )
 
     # Load the tokenizer
-    logger.info(f"Loading tokenizer from {config['model']['tokenizer']}")
-    tokenizer = AutoTokenizer.from_pretrained(config['model']['tokenizer'], add_eos_token=False)
+    logger.info(f"Loading tokenizer from {config['model']['name']}")
+    tokenizer = AutoTokenizer.from_pretrained(
+        config['model']['name'],
+        add_eos_token=False,
+        use_auth_token=credentials.get('hugging_face', {}).get('token', True)
+    )
     tokenizer.pad_token = tokenizer.eos_token
 
     # Default LoRA argument used in this work
