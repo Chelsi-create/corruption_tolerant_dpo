@@ -8,8 +8,6 @@ class DPO_Compute_Prob(DPOTrainer):
     def __init__(self, model, tokenizer, peft_config):
         super().__init__(
             model=model,
-            model_adapter_name="training_model",
-            ref_adapter_name="reference_model",
             args=TrainingArguments(
                 per_device_train_batch_size=1,
                 remove_unused_columns=False,
@@ -55,8 +53,6 @@ class DPO_Loss(DPOTrainer):
     def __init__(self, model, tokenizer, dataset, training_args, num_effective_samples):
         super().__init__(
             model=model,
-            model_adapter_name="training_model",
-            ref_adapter_name="reference_model",
             args=training_args,
             beta=0.1,
             train_dataset=dataset.select(range(num_effective_samples)),
