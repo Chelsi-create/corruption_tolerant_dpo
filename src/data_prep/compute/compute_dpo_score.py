@@ -55,13 +55,13 @@ def main():
     )
 
     logger.info(f"Model Loading - Check")
-    
+    trained_model_config.base_model_name_or_path = config['model']['name']
     model = AutoModelForCausalLM.from_pretrained(
         trained_model_config.base_model_name_or_path,
         device_map="auto",
         use_auth_token=credentials.get('hugging_face', {}).get('token', True)
     )
-    trained_model_config.base_model_name_or_path = config['model']['name']
+    
     model.config.use_cache = False
 
     # Load LoRA adapters (training model)
