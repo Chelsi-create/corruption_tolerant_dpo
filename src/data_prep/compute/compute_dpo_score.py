@@ -12,6 +12,9 @@ import sys
 import warnings
 
 warnings.filterwarnings("ignore")
+# Suppress specific warnings
+warnings.filterwarnings("ignore", category=FutureWarning, message=".*`torch.utils._pytree._register_pytree_node` is deprecated.*")
+warnings.filterwarnings("ignore", category=UserWarning, message=".*optimize_cuda_cache` arguement will be deprecated soon.*")
 
 # Add the project root directory to PYTHONPATH
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
