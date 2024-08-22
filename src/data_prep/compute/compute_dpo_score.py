@@ -53,6 +53,9 @@ def main():
         config['training']['sft']['output_dir'],
         use_auth_token=credentials.get('hugging_face', {}).get('token', True)
     )
+
+    logger.info(f"Model Loading - Check")
+    
     model = AutoModelForCausalLM.from_pretrained(
         trained_model_config.base_model_name_or_path,
         device_map="auto",
