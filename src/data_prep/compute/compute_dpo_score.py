@@ -12,7 +12,7 @@ import yaml
 import sys
 
 # Add the project root directory to PYTHONPATH
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
 
 def load_config(config_path):
     with open(config_path, "r") as f:
@@ -21,7 +21,7 @@ def load_config(config_path):
 
 def main():
     
-    config = load_config(config_path)
+    config = load_config("../configs/config.yaml")
 
     # Setup logging
     log_file_path = os.path.join(config['training']['dpo']['logging_dir'], 'dpo_compute.log')
