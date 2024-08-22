@@ -6,6 +6,7 @@ import logging
 import warnings
 from tqdm import tqdm
 import random
+import pandas as pd
 from nltk.corpus import wordnet
 
 # Ignore all warnings
