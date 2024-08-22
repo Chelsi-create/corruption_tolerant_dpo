@@ -15,7 +15,7 @@ training:
     weight_decay: 0.01
     logging_dir: '../logs'
     logging_steps: 50
-    optimizer: 'adam'
+    optimizer: 'rmsprop'
   
   dpo:
     output_dir: "../output/dpo_results"
@@ -28,7 +28,7 @@ training:
     weight_decay: 0.01
     logging_dir: '../logs'
     logging_steps: 50
-    optimizer: 'adam'
+    optimizer: 'rmsprop'
 
 dataset:
   name: "PKU-Alignment/PKU-SafeRLHF-10K"
