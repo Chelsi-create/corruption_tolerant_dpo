@@ -36,8 +36,8 @@ def main():
     logger = logging.getLogger(__name__)
 
     # Load the poisoned dataset
-    logger.info(f"Loading poisoned dataset from {config['poisoning']['save_dir']}")
-    dataset = load_from_disk(config['poisoning']['save_dir'])
+    logger.info(f"Loading poisoned dataset from {config['poisoning']['load_train_data']}")
+    dataset = load_from_disk(config['poisoning']['load_train_data'])
 
     # Load the trained model and reference model
     logger.info(f"Loading trained model from {config['training']['sft']['output_dir']}")
