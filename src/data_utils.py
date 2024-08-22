@@ -173,18 +173,18 @@ class DataLoader:
         logging.info("Preprocessing for DPO completed.")
         return formatted_dataset
 
-    def format_dataset_for_dpo_score(dataset, config):
+    def format_dataset_for_dpo_score(self, dataset):
         logging.info("Preparing dataset for DPO training...")
     
         formatted_examples = []
     
         for example in dataset:
             # Determine which response is "chosen" and which is "rejected" based on 'safer_response_id'
-            chosen_response = example[config['dataset']['response_0_column']] if example[config['dataset']['safer_response_id_column']] == 0 else example[config['dataset']['response_1_column']]
-            rejected_response = example[config['dataset']['response_1_column']] if example[config['dataset']['safer_response_id_column']] == 0 else example[config['dataset']['response_0_column']]
+            chosen_response = example[self.config['dataset']['response_0_column']] if example[self.config['dataset']['safer_response_id_column']] == 0 else example[self.config['dataset']['response_1_column']]
+            rejected_response = example[self.config['dataset']['response_1_column']] if example[self.config['dataset']['safer_response_id_column']] == 0 else example[self.config['dataset']['response_0_column']]
     
             formatted_example = {
-                "prompt": example[config['dataset']['prompt_column']],
+                "prompt": example[self.config['dataset']['prompt_column']],
                 "chosen": chosen_response,
                 "rejected": rejected_response
             }
