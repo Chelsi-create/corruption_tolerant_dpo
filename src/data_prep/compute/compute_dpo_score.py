@@ -48,7 +48,7 @@ def main():
     # Load the poisoned dataset
     logger.info(f"Loading poisoned dataset from {config['poisoning']['load_train_data']}")
     dataset = load_from_disk(config['poisoning']['load_train_data'])
-    formatted_dataset = data_loader.preprocess_for_dpo(dataset)
+    formatted_dataset = data_loader.format_dataset_for_dpo_score(dataset)
 
     # Load the trained model (used both for training and as a reference model)
     logger.info(f"Loading model from {config['training']['sft']['output_dir']}")
