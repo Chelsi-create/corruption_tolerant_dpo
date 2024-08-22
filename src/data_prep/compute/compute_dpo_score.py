@@ -5,6 +5,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from peft import PeftModel, PeftConfig, LoraConfig
 from tqdm import tqdm
 from src.dpo_compute_utils import DPO_Compute_Prob
+from src.data_utils import DataLoader
 import os
 import logging
 import yaml
@@ -32,6 +33,7 @@ def load_credentials(cred_path):
 def main():
     config = load_config("../configs/config.yaml")
     credentials = load_credentials("../configs/cred.yaml")
+    data_loader = DataLoader(config)
 
     # Setup logging
     logging.basicConfig(
@@ -46,6 +48,7 @@ def main():
     # Load the poisoned dataset
     logger.info(f"Loading poisoned dataset from {config['poisoning']['load_train_data']}")
     dataset = load_from_disk(config['poisoning']['load_train_data'])
+    formatted_dataset = data_loader.preprocess_for_dpo(dataset)
 
     # Load the trained model (used both for training and as a reference model)
     logger.info(f"Loading model from {config['training']['sft']['output_dir']}")
