@@ -130,7 +130,20 @@ def main():
     logger.info("Computing DPO scores...")
     D = DPO_Compute_Prob(model, tokenizer, peft_config)
     logger.info("Hello World")
-    dataset_with_dpo_scores = Dataset.from_generator(D.compute_log_probabilities, gen_kwargs={"dataset": formatted_dataset})
+    # dataset_with_dpo_scores = Dataset.from_generator(D.compute_log_probabilities, gen_kwargs={"dataset": formatted_dataset})
+
+    # Step 1: Initialize the data generator
+    logger.info("Initializing data generator for DPO score computation...")
+    data_generator = D.compute_log_probabilities(formatted_dataset)
+    
+    # Step 2: Create the dataset from the generator
+    logger.info("Creating the dataset with DPO scores from the data generator...")
+    try:
+        dataset_with_dpo_scores = Dataset.from_generator(data_generator)
+        logger.info("Dataset with DPO scores created successfully.")
+    except Exception as e:
+        logger.error(f"Failed to create dataset with DPO scores: {e}")
+        raise e
 
     # Save the dataset with DPO scores
     logger.info(f"Saving the dataset with DPO scores to {config['poisoning']['dpo_score_save_dir']}")
