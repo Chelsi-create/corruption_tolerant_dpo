@@ -16,6 +16,20 @@
 
 import trl
 import transformers
+import yaml
+import os
+import sys
 
 print(f"TRL version: {trl.__version__}")
 print(f"Transformers version: {transformers.__version__}")
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+def load_config(config_path):
+    with open(config_path, "r") as f:
+        config = yaml.safe_load(f)
+    return config
+
+config = load_config("../configs/config.yaml")
+dataset = load_from_disk(config['poisoning']['load_train_data'])
+
+print(dataset)
