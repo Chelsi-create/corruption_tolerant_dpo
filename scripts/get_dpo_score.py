@@ -1,11 +1,14 @@
 import os
 import sys
 import logging
+import warnings
 
 # Add the project root directory to PYTHONPATH
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.data_prep.compute.compute_dpo_score import main as compute_dpo_scores_main
+
+warnings.filterwarnings("ignore")
 
 def run_compute_dpo_scores():
     # Define the configuration path
