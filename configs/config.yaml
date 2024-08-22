@@ -26,6 +26,7 @@ training:
     num_train_epochs: 1
     weight_decay: 0.01
     logging_dir: '../logs'
+    optimizer: 'adam'
 
 dataset:
   name: "PKU-Alignment/PKU-SafeRLHF-10K"
