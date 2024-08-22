@@ -51,7 +51,8 @@ def main():
     logger.info(f"Loading model from {config['training']['sft']['output_dir']}")
     trained_model_config = PeftConfig.from_pretrained(
         config['training']['sft']['output_dir'],
-        use_auth_token=credentials.get('hugging_face', {}).get('token', True)
+        use_auth_token=credentials.get('hugging_face', {}).get('token', True),
+        cache_dir=config['cache_dir']
     )
 
     logger.info(f"Model Loading - Check")
@@ -59,7 +60,8 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(
         trained_model_config.base_model_name_or_path,
         device_map="auto",
-        use_auth_token=credentials.get('hugging_face', {}).get('token', True)
+        use_auth_token=credentials.get('hugging_face', {}).get('token', True),
+        cache_dir=config['cache_dir']
     )
     
     model.config.use_cache = False
@@ -70,13 +72,15 @@ def main():
         model,
         config['training']['sft']['output_dir'],
         is_trainable=True,
-        adapter_name="training_model"
+        adapter_name="training_model",
+        cache_dir=config['cache_dir']
     )
 
     # Load LoRA adapters (reference model)
     model.load_adapter(
         config['training']['sft']['output_dir'],
-        adapter_name="reference_model"
+        adapter_name="reference_model",
+        cache_dir=config['cache_dir']
     )
 
     # Load the tokenizer
@@ -84,7 +88,8 @@ def main():
     tokenizer = AutoTokenizer.from_pretrained(
         config['model']['name'],
         add_eos_token=False,
-        use_auth_token=credentials.get('hugging_face', {}).get('token', True)
+        use_auth_token=credentials.get('hugging_face', {}).get('token', True),
+        cache_dir=config['cache_dir']
     )
     tokenizer.pad_token = tokenizer.eos_token
 
