@@ -110,7 +110,7 @@ def main():
         output_dir=config['training']['dpo']['output_dir'],
         save_steps=2000,
         logging_first_step=True,
-        logging_steps=config['training']['dpo']['logging_dir'], 
+        logging_steps=config['training']['dpo']['logging_steps'], 
         learning_rate=config['training']['dpo']['learning_rate'],
         optim=config['training']['dpo']['optimizer'],
         fp16=config['training']['dpo'].get('fp16', False),
