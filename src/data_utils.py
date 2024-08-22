@@ -173,6 +173,30 @@ class DataLoader:
         logging.info("Preprocessing for DPO completed.")
         return formatted_dataset
 
+    def format_dataset_for_dpo_score(dataset, config):
+        logging.info("Preparing dataset for DPO training...")
+    
+        formatted_examples = []
+    
+        for example in dataset:
+            # Determine which response is "chosen" and which is "rejected" based on 'safer_response_id'
+            chosen_response = example[config['dataset']['response_0_column']] if example[config['dataset']['safer_response_id_column']] == 0 else example[config['dataset']['response_1_column']]
+            rejected_response = example[config['dataset']['response_1_column']] if example[config['dataset']['safer_response_id_column']] == 0 else example[config['dataset']['response_0_column']]
+    
+            formatted_example = {
+                "prompt": example[config['dataset']['prompt_column']],
+                "chosen": chosen_response,
+                "rejected": rejected_response
+            }
+    
+            formatted_examples.append(formatted_example)
+    
+        formatted_dataset = Dataset.from_pandas(pd.DataFrame(formatted_examples))
+    
+        logging.info("Dataset preparation for computing DPO score completed.")
+        return formatted_dataset
+
+
 
 class DatasetPoisoner:
     def __init__(self, dataset):
