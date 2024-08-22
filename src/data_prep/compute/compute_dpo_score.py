@@ -134,12 +134,12 @@ def main():
 
     # Step 1: Initialize the data generator
     logger.info("Initializing data generator for DPO score computation...")
-    data_generator = D.compute_log_probabilities(formatted_dataset)
+    results = D.compute_log_probabilities(formatted_dataset)
     
     # Step 2: Create the dataset from the generator
     logger.info("Creating the dataset with DPO scores from the data generator...")
     try:
-        dataset_with_dpo_scores = Dataset.from_generator(data_generator)
+        dataset_with_dpo_scores = Dataset.from_dict({"results": results})
         logger.info("Dataset with DPO scores created successfully.")
     except Exception as e:
         logger.error(f"Failed to create dataset with DPO scores: {e}")
