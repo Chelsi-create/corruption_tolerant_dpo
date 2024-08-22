@@ -67,6 +67,10 @@ def main():
         cache_dir=config['cache_dir']
     )
     
+    # Ensure model is on the GPU
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+    
     model.config.use_cache = False
 
     # Load LoRA adapters (training model)
@@ -95,6 +99,9 @@ def main():
         cache_dir=config['cache_dir']
     )
     tokenizer.pad_token = tokenizer.eos_token
+
+    # Move tokenizer to GPU if necessary
+    tokenizer.to(device)
 
     # Default LoRA argument used in this work
     peft_config = LoraConfig(
