@@ -93,6 +93,14 @@ class DataLoader:
         logging.info("Saved datasets loaded successfully.")
         return {"train": train_dataset, "validation": val_dataset, "test": test_dataset}
 
+    def load_saved_poison_data(self):
+        logging.info("Loading saved poison datasets from disk...")
+        train_dataset = load_from_disk(self.config["poisoning"]["load_train_data"])
+        test_dataset = load_from_disk(self.config["poisoning"]["load_eval_data"])
+        
+        logging.info("Saved datasets loaded successfully.")
+        return {"train": train_dataset, "test": test_dataset}
+
     def tokenize_function(self, example):
     
         # Check if the example is a dictionary
