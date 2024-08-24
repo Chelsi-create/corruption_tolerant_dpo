@@ -9,6 +9,7 @@ from transformers import Trainer, TrainingArguments
 from peft import get_peft_model, LoraConfig, TaskType
 from tqdm import tqdm
 import datasets
+from datasets import load_from_disk
 
 # Ignore all warnings
 warnings.simplefilter("ignore")
