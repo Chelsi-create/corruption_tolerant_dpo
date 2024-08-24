@@ -4,6 +4,7 @@ import time
 import matplotlib.pyplot as plt
 import torch
 from datasets import load_metric
+from tqdm import tqdm
 
 # Add the project root directory to PYTHONPATH
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
