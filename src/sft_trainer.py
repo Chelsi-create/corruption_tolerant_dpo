@@ -80,7 +80,7 @@ class SFTTrainer:
             model=self.model,
             args=self.training_args,
             train_dataset=self.tokenized_dataset['train'],
-            eval_dataset=self.tokenized_dataset['validation']
+            eval_dataset=self.tokenized_dataset['test']
         )
         logging.info("CustomTrainer initialized.")
 
