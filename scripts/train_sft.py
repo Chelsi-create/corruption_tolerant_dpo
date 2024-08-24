@@ -38,27 +38,33 @@ def plot_training_metrics(training_loss, training_accuracy, training_speed):
 
 from torch.utils.data import DataLoader
 
-def evaluate(model, dataset, device, batch_size=8):
-    """Evaluate the model on the given dataset."""
+def evaluate(model, dataset, device, batch_size=16, num_workers=4):
+    """Evaluate the model on the given dataset with optimizations."""
     model.eval()
-    metric = load_metric("accuracy")  # You can replace this with other metrics if needed
+    metric = load_metric("accuracy")  # Replace this with other metrics if needed
 
-    # Create a DataLoader for batching
-    data_loader = DataLoader(dataset, batch_size=batch_size)
+    # Create a DataLoader with optimizations
+    data_loader = DataLoader(
+        dataset,
+        batch_size=batch_size,
+        num_workers=num_workers,  # Use multiple workers for faster data loading
+        pin_memory=True  # Pin memory for faster data transfer to GPU
+    )
 
     for batch in tqdm(data_loader, desc="Evaluating", leave=False):
         # Move inputs to the device
-        input_ids = torch.stack(batch["input_ids"]).to(device)
-        attention_mask = torch.stack(batch["attention_mask"]).to(device)
-        labels = torch.stack(batch["labels"]).to(device)
+        input_ids = torch.stack(batch["input_ids"]).to(device, non_blocking=True)
+        attention_mask = torch.stack(batch["attention_mask"]).to(device, non_blocking=True)
+        labels = torch.stack(batch["labels"]).to(device, non_blocking=True)
         
-        # Disable gradient calculation for evaluation
+        # Disable gradient calculation for evaluation and use mixed precision
         with torch.no_grad():
-            outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+            with torch.cuda.amp.autocast():  # Enable mixed precision
+                outputs = model(input_ids=input_ids, attention_mask=attention_mask)
         
         logits = outputs.logits
         predictions = torch.argmax(logits, dim=-1)
-        
+
         # Convert predictions and labels to numpy arrays
         predictions = predictions.cpu().numpy().flatten()  # Ensure 1D array
         labels = labels.cpu().numpy().flatten()            # Ensure 1D array
@@ -69,6 +75,7 @@ def evaluate(model, dataset, device, batch_size=8):
     # Compute the final accuracy
     final_score = metric.compute()
     return final_score["accuracy"]
+
 
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
