@@ -37,7 +37,7 @@ def plot_training_metrics(training_loss, training_accuracy, training_speed):
 
 from torch.utils.data import DataLoader
 
-def evaluate(model, dataset, tokenizer, device, batch_size=8):
+def evaluate(model, dataset, device, batch_size=8):
     """Evaluate the model on the given dataset."""
     model.eval()
     metric = load_metric("accuracy")  # You can replace this with other metrics if needed
