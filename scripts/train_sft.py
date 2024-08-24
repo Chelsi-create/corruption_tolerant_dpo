@@ -35,19 +35,20 @@ def plot_training_metrics(training_loss, training_accuracy, training_speed):
     plt.tight_layout()
     plt.show()
 
-def evaluate(model, dataset, tokenizer, device):
+def evaluate(model, dataset, device):
     """Evaluate the model on the given dataset."""
     model.eval()
     metric = load_metric("accuracy")  # You can replace this with other metrics if needed
 
     for batch in dataset:
-        # Prepare inputs and move to device
-        inputs = tokenizer(batch["input"], return_tensors="pt", truncation=True, padding=True).to(device)
+        # Move inputs to the device
+        input_ids = batch["input_ids"].to(device)
+        attention_mask = batch["attention_mask"].to(device)
         labels = batch["labels"].to(device)
         
         # Disable gradient calculation for evaluation
         with torch.no_grad():
-            outputs = model(**inputs)
+            outputs = model(input_ids=input_ids, attention_mask=attention_mask)
         
         logits = outputs.logits
         predictions = torch.argmax(logits, dim=-1)
@@ -58,6 +59,7 @@ def evaluate(model, dataset, tokenizer, device):
     # Compute the final accuracy
     final_score = metric.compute()
     return final_score["accuracy"]
+
 
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -108,7 +110,7 @@ def main():
         # training_speed.append(speed)
 
         # Evaluate on the training set for accuracy
-        train_accuracy = evaluate(model, tokenized_dataset['train'], tokenizer=tokenizer, device=device)
+        train_accuracy = evaluate(model, tokenized_dataset['train'], device=device)
         training_accuracy.append(train_accuracy)
         print(training_accuracy)
 
@@ -120,7 +122,7 @@ def main():
 
     # Evaluate on Test Set
     print("Evaluating on the test set...")
-    test_accuracy = evaluate(model, tokenized_dataset['test'], tokenizer=tokenizer, device=device)
+    test_accuracy = evaluate(model, tokenized_dataset['test'], device=device)
     print(f"Test Accuracy: {test_accuracy:.4f}")
 
     # Plot Training Loss, Accuracy, and Speed
