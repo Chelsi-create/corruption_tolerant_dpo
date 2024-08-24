@@ -40,7 +40,7 @@ def main():
     data_loader = DataLoader(config)
 
     # Load and preprocess the dataset
-    dataset = data_loader.load_from_disk("../dataset/poisoned/poisoned_train")
+    dataset = data_loader.load_saved_data("../dataset/poisoned")
     tokenized_dataset = data_loader.preprocess_for_sft(dataset)
 
     # Load the model
@@ -78,9 +78,7 @@ def main():
 
     # Evaluate on Test Set
     print("Evaluating on the test set...")
-    test_dataset = data_loader.load_from_disk("../dataset/poisoned/poisoned_eval")
-    tokenized_test_dataset = data_loader.preprocess_for_sft(test_dataset)
-    test_accuracy = sft_trainer.evaluate(tokenized_test_dataset)
+    test_accuracy = sft_trainer.evaluate(tokenized_dataset['test'])
     print(f"Test Accuracy: {test_accuracy:.4f}")
 
     # Plot Training Loss and Speed
