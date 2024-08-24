@@ -62,7 +62,10 @@ def evaluate(model, dataset, tokenizer, device):
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(script_dir, '../configs/config.yaml')
+    cred_path = os.path.join(script_dir, '../configs/creds.yaml')
     config = DataLoader.load_config(config_path)
+    creds = DataLoader.load_config(cred_path)
+    sft_model_path = config['training']['sft']['output_dir']
 
     # Initialize the DataLoader
     data_loader = DataLoader(config)
@@ -72,8 +75,9 @@ def main():
     tokenized_dataset = data_loader.preprocess_for_sft(dataset)
 
     # Load the model
-    model_loader = ModelLoader(config)
-    model = model_loader.load_model()
+    model_loader = ModelLoader(sft_model_path, config, creds)
+    model = model_loader.load_base_model()
+    tokenizer = model_loader.load_tokenizer()
 
     # Initialize SFTTrainer
     sft_trainer = SFTTrainer(model, tokenized_dataset, config)
@@ -103,7 +107,7 @@ def main():
         training_speed.append(speed)
 
         # Evaluate on the training set for accuracy
-        train_accuracy = evaluate(model, tokenized_dataset['train'], tokenizer=model_loader.tokenizer, device=device)
+        train_accuracy = evaluate(model, tokenized_dataset['train'], tokenizer=tokenizer, device=device)
         training_accuracy.append(train_accuracy)
 
         print(f"Epoch {epoch + 1}/{config['training']['epochs']}: Loss = {loss:.4f}, Accuracy = {train_accuracy:.4f}, Speed = {speed:.2f} steps/sec")
@@ -114,7 +118,7 @@ def main():
 
     # Evaluate on Test Set
     print("Evaluating on the test set...")
-    test_accuracy = evaluate(model, tokenized_dataset['test'], tokenizer=model_loader.tokenizer, device=device)
+    test_accuracy = evaluate(model, tokenized_dataset['test'], tokenizer=tokenizer, device=device)
     print(f"Test Accuracy: {test_accuracy:.4f}")
 
     # Plot Training Loss, Accuracy, and Speed
