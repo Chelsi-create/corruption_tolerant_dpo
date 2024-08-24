@@ -2,6 +2,8 @@ import os
 import sys
 import time
 import matplotlib.pyplot as plt
+import torch
+from datasets import load_metric
 
 # Add the project root directory to PYTHONPATH
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -10,26 +12,52 @@ from src.model_utils import ModelLoader
 from src.sft_trainer import SFTTrainer
 from src.data_utils import DataLoader
 
-def plot_training_metrics(training_loss, training_speed):
-    """Function to plot training loss and speed."""
+def plot_training_metrics(training_loss, training_accuracy, training_speed):
+    """Function to plot training loss, accuracy, and speed."""
     plt.figure(figsize=(12, 5))
 
-    # Plot Training Loss
+    # Plot Training Loss and Accuracy
     plt.subplot(1, 2, 1)
-    plt.plot(training_loss)
-    plt.title('Training Loss')
-    plt.xlabel('Steps')
-    plt.ylabel('Loss')
+    plt.plot(training_loss, label='Loss')
+    plt.plot(training_accuracy, label='Accuracy')
+    plt.title('Training Loss and Accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Value')
+    plt.legend()
 
     # Plot Training Speed
     plt.subplot(1, 2, 2)
     plt.plot(training_speed)
     plt.title('Training Speed')
-    plt.xlabel('Steps')
+    plt.xlabel('Epochs')
     plt.ylabel('Speed (steps/sec)')
 
     plt.tight_layout()
     plt.show()
+
+def evaluate(model, dataset, tokenizer, device):
+    """Evaluate the model on the given dataset."""
+    model.eval()
+    metric = load_metric("accuracy")  # You can replace this with other metrics if needed
+
+    for batch in dataset:
+        # Prepare inputs and move to device
+        inputs = tokenizer(batch["input"], return_tensors="pt", truncation=True, padding=True).to(device)
+        labels = batch["labels"].to(device)
+        
+        # Disable gradient calculation for evaluation
+        with torch.no_grad():
+            outputs = model(**inputs)
+        
+        logits = outputs.logits
+        predictions = torch.argmax(logits, dim=-1)
+        
+        # Update the metric with predictions and references
+        metric.add_batch(predictions=predictions, references=labels)
+    
+    # Compute the final accuracy
+    final_score = metric.compute()
+    return final_score["accuracy"]
 
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -50,13 +78,17 @@ def main():
     # Initialize SFTTrainer
     sft_trainer = SFTTrainer(model, tokenized_dataset, config)
 
-    # Log for tracking training loss and speed
+    # Log for tracking training loss, accuracy, and speed
     training_loss = []
+    training_accuracy = []
     training_speed = []
 
     # Start Training
     print("Starting training...")
     start_time = time.time()
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
 
     for epoch in range(config['training']['epochs']):
         epoch_start_time = time.time()
@@ -70,7 +102,11 @@ def main():
         speed = len(tokenized_dataset['train']) / epoch_duration
         training_speed.append(speed)
 
-        print(f"Epoch {epoch + 1}/{config['training']['epochs']}: Loss = {loss:.4f}, Speed = {speed:.2f} steps/sec")
+        # Evaluate on the training set for accuracy
+        train_accuracy = evaluate(model, tokenized_dataset['train'], tokenizer=model_loader.tokenizer, device=device)
+        training_accuracy.append(train_accuracy)
+
+        print(f"Epoch {epoch + 1}/{config['training']['epochs']}: Loss = {loss:.4f}, Accuracy = {train_accuracy:.4f}, Speed = {speed:.2f} steps/sec")
 
     # Calculate total training time
     total_training_time = time.time() - start_time
@@ -78,11 +114,11 @@ def main():
 
     # Evaluate on Test Set
     print("Evaluating on the test set...")
-    test_accuracy = sft_trainer.evaluate(tokenized_dataset['test'])
+    test_accuracy = evaluate(model, tokenized_dataset['test'], tokenizer=model_loader.tokenizer, device=device)
     print(f"Test Accuracy: {test_accuracy:.4f}")
 
-    # Plot Training Loss and Speed
-    plot_training_metrics(training_loss, training_speed)
+    # Plot Training Loss, Accuracy, and Speed
+    plot_training_metrics(training_loss, training_accuracy, training_speed)
 
 if __name__ == "__main__":
     os.environ["NUMBA_NUM_THREADS"] = "1"
