@@ -62,7 +62,7 @@ def evaluate(model, dataset, tokenizer, device):
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(script_dir, '../configs/config.yaml')
-    cred_path = os.path.join(script_dir, '../configs/creds.yaml')
+    cred_path = os.path.join(script_dir, '../configs/cred.yaml')
     config = DataLoader.load_config(config_path)
     creds = DataLoader.load_config(cred_path)
     sft_model_path = config['training']['sft']['output_dir']
