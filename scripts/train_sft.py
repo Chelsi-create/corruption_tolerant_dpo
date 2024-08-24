@@ -110,7 +110,7 @@ def main():
         train_accuracy = evaluate(model, tokenized_dataset['train'], tokenizer=tokenizer, device=device)
         training_accuracy.append(train_accuracy)
 
-        print(f"Epoch {epoch + 1}/{config['training']['sft]['num_train_epochs']}: Loss = {loss:.4f}, Accuracy = {train_accuracy:.4f}, Speed = {speed:.2f} steps/sec")
+        print(f"Epoch {epoch + 1}/{config['training']['sft']['num_train_epochs']}: Loss = {loss:.4f}, Accuracy = {train_accuracy:.4f}, Speed = {speed:.2f} steps/sec")
 
     # Calculate total training time
     total_training_time = time.time() - start_time
