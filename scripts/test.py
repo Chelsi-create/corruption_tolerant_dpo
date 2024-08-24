@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from transformers import Trainer, TrainingArguments
 from peft import get_peft_model, LoraConfig, TaskType
 from tqdm import tqdm
+import datasets
 
 # Ignore all warnings
 warnings.simplefilter("ignore")
@@ -133,7 +134,7 @@ def main():
     data_loader = DataLoader(config)
 
     # Load and preprocess the dataset
-    dataset = data_loader.load_from_disk("../dataset/poisoned/poisoned_train")
+    dataset = load_from_disk("../dataset/poisoned/poisoned_train")
     tokenized_dataset = data_loader.preprocess_for_sft(dataset)
 
     # Load the model
@@ -171,7 +172,7 @@ def main():
 
     # Evaluate on Test Set
     print("Evaluating on the test set...")
-    test_dataset = data_loader.load_from_disk("../dataset/poisoned/poisoned_eval")
+    test_dataset = load_from_disk("../dataset/poisoned/poisoned_eval")
     tokenized_test_dataset = data_loader.preprocess_for_sft(test_dataset)
     test_accuracy = sft_trainer.evaluate(tokenized_test_dataset)
     print(f"Test Accuracy: {test_accuracy:.4f}")
