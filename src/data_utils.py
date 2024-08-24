@@ -15,7 +15,7 @@ warnings.simplefilter("ignore")
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-class DataLoader:
+class DataLoad:
     def __init__(self, config):
         self.config = config
         logging.info("Initializing DataLoader with config: ")
