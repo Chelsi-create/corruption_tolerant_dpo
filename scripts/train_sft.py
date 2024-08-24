@@ -40,7 +40,7 @@ def main():
     data_loader = DataLoader(config)
 
     # Load and preprocess the dataset
-    dataset = data_loader.load_saved_data("../dataset/poisoned")
+    dataset = data_loader.load_saved_poison_data()
     tokenized_dataset = data_loader.preprocess_for_sft(dataset)
 
     # Load the model
