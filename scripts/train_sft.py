@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.model_utils import ModelLoader
 from src.sft_trainer import SFTTrainer
-from src.data_utils import DataLoader
+from src.data_utils import DataLoad
 
 def plot_training_metrics(training_loss, training_accuracy, training_speed):
     """Function to plot training loss, accuracy, and speed."""
@@ -71,12 +71,12 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(script_dir, '../configs/config.yaml')
     cred_path = os.path.join(script_dir, '../configs/cred.yaml')
-    config = DataLoader.load_config(config_path)
-    creds = DataLoader.load_config(cred_path)
+    config = DataLoad.load_config(config_path)
+    creds = DataLoad.load_config(cred_path)
     sft_model_path = config['training']['sft']['output_dir']
 
     # Initialize the DataLoader
-    data_loader = DataLoader(config)
+    data_loader = DataLoad(config)
 
     # Load and preprocess the dataset
     dataset = data_loader.load_saved_poison_data()
