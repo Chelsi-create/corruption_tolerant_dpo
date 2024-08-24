@@ -69,8 +69,6 @@ def evaluate(model, dataset, device, batch_size=8):
     final_score = metric.compute()
     return final_score["accuracy"]
 
-
-
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(script_dir, '../configs/config.yaml')
