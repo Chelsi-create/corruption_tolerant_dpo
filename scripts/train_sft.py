@@ -97,18 +97,19 @@ def main():
     for epoch in range(config['training']['sft']['num_train_epochs']):
         epoch_start_time = time.time()
 
-        # Train and log the loss
-        loss = sft_trainer.train_epoch()
-        training_loss.append(loss)
+        # # Train and log the loss
+        # loss = sft_trainer.train_epoch()
+        # training_loss.append(loss)
 
-        # Calculate speed (steps/sec)
-        epoch_duration = time.time() - epoch_start_time
-        speed = len(tokenized_dataset['train']) / epoch_duration
-        training_speed.append(speed)
+        # # Calculate speed (steps/sec)
+        # epoch_duration = time.time() - epoch_start_time
+        # speed = len(tokenized_dataset['train']) / epoch_duration
+        # training_speed.append(speed)
 
         # Evaluate on the training set for accuracy
         train_accuracy = evaluate(model, tokenized_dataset['train'], tokenizer=tokenizer, device=device)
         training_accuracy.append(train_accuracy)
+        print(training_accuracy)
 
         print(f"Epoch {epoch + 1}/{config['training']['sft']['num_train_epochs']}: Loss = {loss:.4f}, Accuracy = {train_accuracy:.4f}, Speed = {speed:.2f} steps/sec")
 
