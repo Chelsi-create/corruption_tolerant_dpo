@@ -37,6 +37,7 @@ def plot_training_metrics(training_loss, training_accuracy, training_speed):
 
 from torch.utils.data import DataLoader
 
+
 def evaluate(model, dataset, device, batch_size=8):
     """Evaluate the model on the given dataset."""
     model.eval()
@@ -58,13 +59,16 @@ def evaluate(model, dataset, device, batch_size=8):
         logits = outputs.logits
         predictions = torch.argmax(logits, dim=-1)
         
+        # Convert predictions and labels to numpy arrays
+        predictions = predictions.cpu().numpy()
+        labels = labels.cpu().numpy()
+        
         # Update the metric with predictions and references
         metric.add_batch(predictions=predictions, references=labels)
     
     # Compute the final accuracy
     final_score = metric.compute()
     return final_score["accuracy"]
-
 
 
 def main():
