@@ -3,6 +3,7 @@ from transformers import Trainer, TrainingArguments
 from peft import get_peft_model, LoraConfig, TaskType
 import warnings
 import logging
+from tqdm import tqdm
 
 # Ignore all warnings
 warnings.simplefilter("ignore")
@@ -92,7 +93,7 @@ class SFTTrainer:
         num_steps = len(self.trainer.get_train_dataloader())
         
         # Iterate over batches in the training dataloader
-        for step, inputs in enumerate(self.trainer.get_train_dataloader()):
+        for step, inputs in enumerate(tqdm(self.trainer.get_train_dataloader(), desc="Training Steps", leave=False)):
             inputs = {k: v.to(self.device) for k, v in inputs.items()}  # Move inputs to device
             loss = self.trainer.training_step(self.model, inputs)
             epoch_loss += loss.item()
