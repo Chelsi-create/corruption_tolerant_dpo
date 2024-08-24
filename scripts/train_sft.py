@@ -94,7 +94,7 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
-    for epoch in range(config['training']['sft]['num_train_epochs']):
+    for epoch in range(config['training']['sft']['num_train_epochs']):
         epoch_start_time = time.time()
 
         # Train and log the loss
