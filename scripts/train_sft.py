@@ -73,6 +73,7 @@ def main():
     # Load and preprocess the dataset
     dataset = data_loader.load_saved_poison_data()
     tokenized_dataset = data_loader.preprocess_for_sft(dataset)
+    print(tokenized_dataset['train'].column_names)
 
     # Load the model
     model_loader = ModelLoader(sft_model_path, config, creds)
