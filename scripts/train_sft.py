@@ -35,16 +35,21 @@ def plot_training_metrics(training_loss, training_accuracy, training_speed):
     plt.tight_layout()
     plt.show()
 
-def evaluate(model, dataset, device):
+from torch.utils.data import DataLoader
+
+def evaluate(model, dataset, device, batch_size=8):
     """Evaluate the model on the given dataset."""
     model.eval()
     metric = load_metric("accuracy")  # You can replace this with other metrics if needed
 
-    for batch in dataset:
+    # Create a DataLoader for batching
+    data_loader = DataLoader(dataset, batch_size=batch_size)
+
+    for batch in data_loader:
         # Move inputs to the device
-        input_ids = batch["input_ids"].to(device)
-        attention_mask = batch["attention_mask"].to(device)
-        labels = batch["labels"].to(device)
+        input_ids = torch.stack(batch["input_ids"]).to(device)
+        attention_mask = torch.stack(batch["attention_mask"]).to(device)
+        labels = torch.stack(batch["labels"]).to(device)
         
         # Disable gradient calculation for evaluation
         with torch.no_grad():
@@ -59,6 +64,7 @@ def evaluate(model, dataset, device):
     # Compute the final accuracy
     final_score = metric.compute()
     return final_score["accuracy"]
+
 
 
 def main():
