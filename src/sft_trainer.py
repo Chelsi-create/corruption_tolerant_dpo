@@ -13,9 +13,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 class CustomTrainer(Trainer):
     def compute_loss(self, model, inputs, return_outputs=False):
         """Custom loss computation to ensure loss is returned correctly."""
-        # Print or log a sample input to verify if it contains the labels
-        # print("Hello")
-        # print("Sample input (including labels):", {k: v[0].cpu().numpy() if isinstance(v, torch.Tensor) else v[0] for k, v in inputs.items()})
         labels = inputs.get("labels")
         
         # Ensure labels are not None
@@ -63,11 +60,8 @@ class SFTTrainer:
         self.model.to(self.device)
         logging.info("Model successfully moved to %s.", self.device)
 
-    def train(self):
-        logging.info("Starting the training process...")
-        
         # Define training arguments for SFT (Supervised Fine-Tuning)
-        training_args = TrainingArguments(
+        self.training_args = TrainingArguments(
             output_dir=self.config['training']['sft']['output_dir'],
             evaluation_strategy=self.config['training']['sft']['evaluation_strategy'],
             learning_rate=self.config['training']['sft']['learning_rate'],
@@ -82,17 +76,41 @@ class SFTTrainer:
         logging.info("Training arguments initialized.")
 
         # Initialize the CustomTrainer for SFT
-        trainer = CustomTrainer(
+        self.trainer = CustomTrainer(
             model=self.model,
-            args=training_args,
+            args=self.training_args,
             train_dataset=self.tokenized_dataset['train'],
             eval_dataset=self.tokenized_dataset['validation']
         )
         logging.info("CustomTrainer initialized.")
 
-        # Train the model using Supervised Fine-Tuning (SFT)
-        logging.info("Training started...")
-        trainer.train()
+    def train_epoch(self):
+        """Train the model for one epoch and return the average loss."""
+        logging.info("Training for one epoch...")
+        self.trainer.state.epoch = 1
+        epoch_loss = 0
+        num_steps = len(self.trainer.get_train_dataloader())
+        
+        # Iterate over batches in the training dataloader
+        for step, inputs in enumerate(self.trainer.get_train_dataloader()):
+            inputs = {k: v.to(self.device) for k, v in inputs.items()}  # Move inputs to device
+            loss = self.trainer.training_step(self.model, inputs)
+            epoch_loss += loss.item()
+
+        avg_loss = epoch_loss / num_steps
+        logging.info(f"Epoch completed with average loss: {avg_loss:.4f}")
+        return avg_loss
+
+    def evaluate(self, eval_dataset):
+        """Evaluate the model and return the accuracy."""
+        self.trainer.eval_dataset = eval_dataset
+        metrics = self.trainer.evaluate()
+        logging.info(f"Evaluation metrics: {metrics}")
+        return metrics['eval_accuracy'] if 'eval_accuracy' in metrics else metrics
+
+    def train(self):
+        logging.info("Starting the training process...")
+        self.trainer.train()
         logging.info("Training completed.")
 
         # Save the fine-tuned model
