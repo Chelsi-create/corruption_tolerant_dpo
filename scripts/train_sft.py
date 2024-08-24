@@ -130,7 +130,7 @@ def main():
         training_accuracy.append(train_accuracy)
         print(training_accuracy)
 
-        print(f"Epoch {epoch + 1}/{config['training']['sft']['num_train_epochs']}: Accuracy = {train_accuracy:.4f})
+        print(f"Epoch {epoch + 1}/{config['training']['sft']['num_train_epochs']}: Accuracy = {train_accuracy:.4f}")
 
     # Calculate total training time
     total_training_time = time.time() - start_time
