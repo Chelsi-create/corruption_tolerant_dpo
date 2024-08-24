@@ -45,7 +45,7 @@ def evaluate(model, dataset, device, batch_size=8):
     # Create a DataLoader for batching
     data_loader = DataLoader(dataset, batch_size=batch_size)
 
-    for batch in data_loader:
+    for batch in tqdm(data_loader, desc="Evaluating", leave=False):
         # Move inputs to the device
         input_ids = torch.stack(batch["input_ids"]).to(device)
         attention_mask = torch.stack(batch["attention_mask"]).to(device)
