@@ -13,8 +13,8 @@ from src.model_utils import ModelLoader
 from src.sft_trainer import SFTTrainer
 from src.data_utils import DataLoad
 
-def plot_training_metrics(training_loss, training_accuracy, training_speed):
-    """Function to plot training loss, accuracy, and speed."""
+def plot_training_metrics(training_loss, training_accuracy, training_speed, save_path):
+    """Function to plot and save training loss, accuracy, and speed."""
     plt.figure(figsize=(12, 5))
 
     # Plot Training Loss and Accuracy
@@ -34,6 +34,11 @@ def plot_training_metrics(training_loss, training_accuracy, training_speed):
     plt.ylabel('Speed (steps/sec)')
 
     plt.tight_layout()
+
+    # Save the plot to a file
+    plt.savefig(os.path.join(save_path, 'training_metrics.png'))
+    
+    # Optionally, you can still display the plot
     plt.show()
 
 from torch.utils.data import DataLoader
@@ -141,8 +146,8 @@ def main():
     test_accuracy = evaluate(model, tokenized_dataset['test'], device=device)
     print(f"Test Accuracy: {test_accuracy:.4f}")
 
-    # Plot Training Loss, Accuracy, and Speed
-    plot_training_metrics(training_loss, training_accuracy, training_speed)
+    # Plot Training Loss, Accuracy, and Speed and save the plots
+    plot_training_metrics(training_loss, training_accuracy, training_speed, save_path='../dataset/plots')
 
 if __name__ == "__main__":
     os.environ["NUMBA_NUM_THREADS"] = "1"
