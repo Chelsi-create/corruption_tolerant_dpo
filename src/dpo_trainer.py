@@ -110,7 +110,7 @@ class DPOTrainerModule:
                 ref_model=self.reference_model,
                 args=training_args,
                 train_dataset=self.formatted_dataset['train'],
-                eval_dataset=self.formatted_dataset['validation'],
+                eval_dataset=self.formatted_dataset['test'],
                 tokenizer=self.tokenizer,
                 beta=self.config['training']['dpo'].get('beta', 0.1),
                 max_prompt_length=self.config['training']['dpo'].get('max_prompt_length', 512),
