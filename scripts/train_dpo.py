@@ -44,7 +44,7 @@ def main():
     data_loader = DataLoad(config)
 
     # Load and preprocess the dataset
-    dataset = data_loader.load_saved_poison_data()
+    dataset = data_loader.load_saved_data()
     formatted_dataset = data_loader.preprocess_for_dpo(dataset)
 
     # Path to the saved SFT model
