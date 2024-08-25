@@ -25,11 +25,6 @@ def main():
     # Path to the saved SFT model
     sft_model_path = config['training']['sft']['output_dir']
 
-    # # Load the fine-tuned SFT model using PEFT
-    # model_loader = ModelLoader(sft_model_path, config, credentials)
-    # print("Hello, Model Loader started")
-    # sft_model = model_loader.load_model()
-
     # Train the model using Direct Policy Optimization (DPO)
     dpo_trainer = DPOTrainerModule(formatted_dataset, config, credentials)
     dpo_trainer.train()
