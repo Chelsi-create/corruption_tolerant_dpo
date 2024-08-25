@@ -1,5 +1,7 @@
 import os
 import sys
+import time
+import matplotlib.pyplot as plt
 
 # Add the project root directory to PYTHONPATH
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -7,6 +9,29 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.data_utils import DataLoader
 from src.model_utils import ModelLoader
 from src.dpo_trainer import DPOTrainerModule
+
+def plot_training_metrics(training_loss, training_accuracy, training_speed):
+    """Function to plot training loss, accuracy, and speed."""
+    plt.figure(figsize=(12, 5))
+
+    # Plot Training Loss and Accuracy
+    plt.subplot(1, 2, 1)
+    plt.plot(training_loss, label='Loss')
+    plt.plot(training_accuracy, label='Accuracy')
+    plt.title('Training Loss and Accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Value')
+    plt.legend()
+
+    # Plot Training Speed
+    plt.subplot(1, 2, 2)
+    plt.plot(training_speed)
+    plt.title('Training Speed')
+    plt.xlabel('Epochs')
+    plt.ylabel('Speed (steps/sec)')
+
+    plt.tight_layout()
+    plt.show()
 
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -19,7 +44,7 @@ def main():
     data_loader = DataLoader(config)
 
     # Load and preprocess the dataset
-    dataset = data_loader.load_saved_data()
+    dataset = data_loader.load_saved_poison_data()
     formatted_dataset = data_loader.preprocess_for_dpo(dataset)
 
     # Path to the saved SFT model
@@ -27,7 +52,16 @@ def main():
 
     # Train the model using Direct Policy Optimization (DPO)
     dpo_trainer = DPOTrainerModule(formatted_dataset, config, credentials)
+    
+    # Tracking metrics
+    training_loss = []
+    training_accuracy = []
+    training_speed = []
+
     dpo_trainer.train()
+
+    # After training, you can save and plot the metrics
+    plot_training_metrics(training_loss, training_accuracy, training_speed)
 
 if __name__ == "__main__":
     os.environ["NUMBA_NUM_THREADS"] = "1"
