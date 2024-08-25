@@ -90,7 +90,7 @@ class DPOTrainerModule:
         self.check_gradients(self.model)
         
         training_args = TrainingArguments(
-            output_dir=self.config['training']['dpo']['output_dir'],
+            output_dir=self.config['training']['dpo']['output_dir_clean'],
             evaluation_strategy=self.config['training']['dpo']['evaluation_strategy'],
             learning_rate=self.config['training']['dpo']['learning_rate'],
             per_device_train_batch_size=self.config['training']['dpo']['per_device_train_batch_size'],
