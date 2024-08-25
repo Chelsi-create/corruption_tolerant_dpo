@@ -5,6 +5,8 @@ import logging
 import os
 from src.model_utils import ModelLoader
 from peft import PeftConfig
+from datasets import load_metric
+from tqdm import tqdm
 
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
@@ -13,8 +15,6 @@ class DPOTrainerModule:
         self.config = config
         self.credentials = credentials
         self.formatted_dataset = formatted_dataset
-
-        
 
         log_file_path = os.path.join(self.config['training']['dpo']['logging_dir'], 'dpo_training.log')
         logging.basicConfig(
@@ -61,7 +61,23 @@ class DPOTrainerModule:
                 self.logger.info(f"{name} requires gradients")
             else:
                 self.logger.warning(f"{name} does not require gradients")
-                
+
+    def evaluate(self, model, dataset):
+        """Evaluate the model on the given dataset."""
+        model.eval()
+        metric = load_metric("accuracy")
+
+        for batch in tqdm(dataset, desc="Evaluating"):
+            inputs = {k: v.to(self.device) for k, v in batch.items()}
+            
+            with torch.no_grad():
+                outputs = model(**inputs)
+            
+            predictions = torch.argmax(outputs.logits, dim=-1)
+            metric.add_batch(predictions=predictions, references=inputs['labels'])
+
+        final_score = metric.compute()
+        return final_score['accuracy']
 
     def train(self):
         self.logger.info("Setting up training arguments...")
@@ -84,7 +100,7 @@ class DPOTrainerModule:
             fp16=False,
             gradient_accumulation_steps=self.config['training']['dpo']['gradient_accumulation_steps'],
             gradient_checkpointing=True,
-            optim="adafactor",  # Memory-efficient optimizer
+            optim="adafactor",
         )
 
         self.logger.info("Initializing the DPO Trainer...")
@@ -96,8 +112,8 @@ class DPOTrainerModule:
                 train_dataset=self.formatted_dataset['train'],
                 eval_dataset=self.formatted_dataset['validation'],
                 tokenizer=self.tokenizer,
-                beta=self.config['training']['dpo'].get('beta', 0.1),  # Add beta parameter
-                max_prompt_length=self.config['training']['dpo'].get('max_prompt_length', 512),  # Add max_prompt_length
+                beta=self.config['training']['dpo'].get('beta', 0.1),
+                max_prompt_length=self.config['training']['dpo'].get('max_prompt_length', 512),
                 max_length=self.config['training']['dpo'].get('max_length', 1024)
             )
         except Exception as e:
@@ -106,8 +122,32 @@ class DPOTrainerModule:
 
         self.logger.info("Starting DPO training...")
         try:
-            trainer.train()
+            total_training_time = 0
+            for epoch in range(training_args.num_train_epochs):
+                epoch_start_time = time.time()
+                train_result = trainer.train()
+                epoch_duration = time.time() - epoch_start_time
+                total_training_time += epoch_duration
+
+                # Calculate training speed
+                train_speed = len(self.formatted_dataset['train']) / epoch_duration
+                self.logger.info(f"Epoch {epoch + 1} training speed: {train_speed:.2f} steps/sec")
+
+                # Evaluate the model
+                train_accuracy = self.evaluate(self.model, self.formatted_dataset['train'])
+                self.logger.info(f"Epoch {epoch + 1} training accuracy: {train_accuracy:.4f}")
+                
+                # Log loss
+                train_loss = train_result.training_loss
+                self.logger.info(f"Epoch {epoch + 1} training loss: {train_loss:.4f}")
+
+                # Evaluate on the validation set
+                val_accuracy = self.evaluate(self.model, self.formatted_dataset['validation'])
+                self.logger.info(f"Epoch {epoch + 1} validation accuracy: {val_accuracy:.4f}")
+
             self.logger.info("DPO training completed.")
+            self.logger.info(f"Total training time: {total_training_time:.2f} seconds")
+
         except Exception as e:
             self.logger.error(f"Error during DPO training: {e}")
             raise e
