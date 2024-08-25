@@ -155,16 +155,16 @@ class DPOTrainerModule:
 
         self.logger.info("Saving the fine-tuned DPO model...")
         try:
-            trainer.model.save_pretrained(self.config['training']['dpo']['output_dir'])
-            self.logger.info(f"Model saved to {self.config['training']['dpo']['output_dir']}")
+            trainer.model.save_pretrained(self.config['training']['dpo']['output_dir_clean'])
+            self.logger.info(f"Model saved to {self.config['training']['dpo']['output_dir_clean']}")
         except Exception as e:
             self.logger.error(f"Error saving the model: {e}")
             raise e
 
         self.logger.info("Saving the tokenizer...")
         try:
-            self.tokenizer.save_pretrained(self.config['training']['dpo']['output_dir'])
-            self.logger.info(f"Tokenizer saved to {self.config['training']['dpo']['output_dir']}")
+            self.tokenizer.save_pretrained(self.config['training']['dpo']['output_dir_clean'])
+            self.logger.info(f"Tokenizer saved to {self.config['training']['dpo']['output_dir_clean']}")
         except Exception as e:
             self.logger.error(f"Error saving the tokenizer: {e}")
             raise e
