@@ -8,6 +8,7 @@ from peft import PeftConfig
 from datasets import load_metric
 from tqdm import tqdm
 import time
+from torch.utils.data import DataLoader
 
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
