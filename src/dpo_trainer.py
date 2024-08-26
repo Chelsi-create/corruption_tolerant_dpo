@@ -70,11 +70,11 @@ class DPOTrainerModule:
         model.eval()
         metric = load_metric("accuracy")  # You can replace this with other metrics if needed
         
-        # Use dataset directly for batching
-        data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        # Create a DataLoader for batching
+        data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False)
     
         for batch in tqdm(data_loader, desc="Evaluating", leave=False):
-            # Prepare inputs for model evaluation
+            # Since batch is a list of dictionaries, we need to process each item
             prompts = [entry['prompt'] for entry in batch]
             chosen_responses = [entry['chosen'] for entry in batch]
             rejected_responses = [entry['rejected'] for entry in batch]
@@ -100,6 +100,7 @@ class DPOTrainerModule:
         # Compute the final accuracy
         final_score = metric.compute()
         return final_score["accuracy"]
+
 
     def train(self):
         self.logger.info("Setting up training arguments...")
