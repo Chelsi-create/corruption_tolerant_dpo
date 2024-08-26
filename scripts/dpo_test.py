@@ -36,6 +36,7 @@ config_path = os.path.join(script_dir, '../configs/config.yaml')
 cred_path = os.path.join(script_dir, '../configs/cred.yaml')
 config = DataLoad.load_config(config_path)
 credentials = DataLoad.load_config(cred_path)
+token = credentials['hugging_face']['token']
 
 # Initialize the DataLoader
 logger.info("Initializing the DataLoader...")
@@ -43,14 +44,14 @@ data_loader = DataLoad(config)
 
 # Load SFT model and tokenizer
 logger.info("Loading SFT model and tokenizer...")
-peft_config = PeftConfig.from_pretrained(sft_model_path, cache_dir=cache_dir)
+peft_config = PeftConfig.from_pretrained(sft_model_path, cache_dir=cache_dir, token=token)
 peft_config.base_model_name_or_path = "meta-llama/Llama-2-7b-hf"
-model = AutoModelForCausalLM.from_pretrained(peft_config.base_model_name_or_path, device_map="auto", cache_dir=cache_dir)
+model = AutoModelForCausalLM.from_pretrained(peft_config.base_model_name_or_path, device_map="auto", cache_dir=cache_dir, token=token)
 model.config.use_cache = False
-model = PeftModel.from_pretrained(model, sft_model_path, is_trainable=True, adapter_name="training_model", cache_dir=cache_dir)
+model = PeftModel.from_pretrained(model, sft_model_path, is_trainable=True, adapter_name="training_model", cache_dir=cache_dir, token=token)
 model.load_adapter(sft_model_path, adapter_name="reference_model")
 
-tokenizer = AutoTokenizer.from_pretrained(peft_config.base_model_name_or_path, padding_side='left', cache_dir=cache_dir)
+tokenizer = AutoTokenizer.from_pretrained(peft_config.base_model_name_or_path, padding_side='left', cache_dir=cache_dir, token=token)
 if tokenizer.pad_token is None:
     tokenizer.pad_token = tokenizer.eos_token
 
