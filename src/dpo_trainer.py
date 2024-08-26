@@ -72,15 +72,14 @@ class DPOTrainerModule:
         data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size)
     
         for batch in tqdm(data_loader, desc="Evaluating", leave=False):
-            # Check and move only tensor inputs to the device
-            inputs = {k: (v.to(self.device) if torch.is_tensor(v) else v) for k, v in batch.items()}
-            
-            # Separate out the labels if they're in the batch
-            labels = inputs.pop("labels").to(self.device)
+            # Move all inputs to the device
+            input_ids = torch.stack(batch["input_ids"]).to(self.device)
+            attention_mask = torch.stack(batch["attention_mask"]).to(self.device)
+            labels = torch.stack(batch["labels"]).to(self.device)
     
             # Disable gradient calculation for evaluation
             with torch.no_grad():
-                outputs = model(**inputs)
+                outputs = model(input_ids=input_ids, attention_mask=attention_mask)
     
             logits = outputs.logits
             predictions = torch.argmax(logits, dim=-1)
@@ -95,6 +94,7 @@ class DPOTrainerModule:
         # Compute the final accuracy
         final_score = metric.compute()
         return final_score["accuracy"]
+
 
     def train(self):
         self.logger.info("Setting up training arguments...")
