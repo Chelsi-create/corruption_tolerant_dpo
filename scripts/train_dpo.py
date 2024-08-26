@@ -46,7 +46,7 @@ def main():
     # Load and preprocess the dataset
     dataset = data_loader.load_saved_data()
     formatted_dataset = data_loader.preprocess_for_dpo(dataset)
-    print(formatted_dataset['train'].column_names)
+    # print(formatted_dataset['train'].column_names)
 
     # Path to the saved SFT model
     sft_model_path = config['training']['sft']['output_dir']
