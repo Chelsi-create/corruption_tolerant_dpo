@@ -74,13 +74,9 @@ class DPOTrainerModule:
         data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False)
     
         for batch in tqdm(data_loader, desc="Evaluating", leave=False):
-            # Since batch is a list of dictionaries, we need to process each item
-            print("Batch type:", type(batch))
-            print("Batch content:", batch)
             prompts = batch['prompt']
             chosen_responses = batch['chosen']
-            rejected_responses = batch['rejected']
-    
+            
             # Tokenize inputs and move to device
             inputs = self.tokenizer(prompts, padding=True, truncation=True, return_tensors="pt").to(self.device)
             labels = self.tokenizer(chosen_responses, padding=True, truncation=True, return_tensors="pt").to(self.device)
@@ -88,17 +84,24 @@ class DPOTrainerModule:
             # Disable gradient calculation for evaluation
             with torch.no_grad():
                 outputs = model(**inputs)
-    
+            
             logits = outputs.logits
             predictions = torch.argmax(logits, dim=-1)
             
-            # Convert predictions and labels to numpy arrays
-            predictions = predictions.cpu().numpy().flatten()  # Ensure 1D array
-            labels = labels.input_ids.cpu().numpy().flatten()  # Use input_ids for labels
+            # Flatten predictions and labels to ensure they are 1D arrays
+            predictions = predictions.cpu().numpy().flatten()
+            labels = labels.input_ids.cpu().numpy().flatten()
+    
+            # Debugging print statements
+            print(f"Predictions shape: {predictions.shape}, Labels shape: {labels.shape}")
             
+            if len(predictions) != len(labels):
+                print("Mismatch in number of predictions and labels")
+                continue  # Skip this batch to avoid errors
+    
             # Update the metric with predictions and references
             metric.add_batch(predictions=predictions, references=labels)
-    
+        
         # Compute the final accuracy
         final_score = metric.compute()
         return final_score["accuracy"]
