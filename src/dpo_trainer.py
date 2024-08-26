@@ -75,6 +75,8 @@ class DPOTrainerModule:
     
         for batch in tqdm(data_loader, desc="Evaluating", leave=False):
             # Since batch is a list of dictionaries, we need to process each item
+            print("Batch type:", type(batch))
+            print("Batch content:", batch)
             prompts = [entry['prompt'] for entry in batch]
             chosen_responses = [entry['chosen'] for entry in batch]
             rejected_responses = [entry['rejected'] for entry in batch]
