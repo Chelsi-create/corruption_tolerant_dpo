@@ -166,24 +166,24 @@ class DPOTrainerModule:
             total_training_time = 0
             for epoch in range(training_args.num_train_epochs):
                 epoch_start_time = time.time()
-                # train_result = trainer.train()
+                train_result = trainer.train()
                 epoch_duration = time.time() - epoch_start_time
                 total_training_time += epoch_duration
 
-                # # Calculate training speed
-                # train_speed = len(self.formatted_dataset['train']) / epoch_duration
-                # self.logger.info(f"Epoch {epoch + 1} training speed: {train_speed:.2f} steps/sec")
+                # Calculate training speed
+                train_speed = len(self.formatted_dataset['train']) / epoch_duration
+                self.logger.info(f"Epoch {epoch + 1} training speed: {train_speed:.2f} steps/sec")
 
                 # Evaluate the model
-                train_accuracy = self.evaluate(self.model, self.formatted_dataset['train'])
+                train_accuracy = self.evaluate(trainer.model, self.formatted_dataset['train'])
                 self.logger.info(f"Epoch {epoch + 1} training accuracy: {train_accuracy:.4f}")
                 
-                # # Log loss
-                # train_loss = train_result.training_loss
-                # self.logger.info(f"Epoch {epoch + 1} training loss: {train_loss:.4f}")
+                # Log loss
+                train_loss = train_result.training_loss
+                self.logger.info(f"Epoch {epoch + 1} training loss: {train_loss:.4f}")
 
                 # Evaluate on the validation set
-                val_accuracy = self.evaluate(self.model, self.formatted_dataset['test'])
+                val_accuracy = self.evaluate(trainer.model, self.formatted_dataset['test'])
                 self.logger.info(f"Epoch {epoch + 1} validation accuracy: {val_accuracy:.4f}")
 
             self.logger.info("DPO training completed.")
