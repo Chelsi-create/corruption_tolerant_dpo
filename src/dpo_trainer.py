@@ -81,10 +81,12 @@ class DPOTrainerModule:
             inputs = self.tokenizer(prompts, padding=True, truncation=True, return_tensors="pt").to(self.device)
             labels = self.tokenizer(chosen_responses, padding=True, truncation=True, return_tensors="pt").to(self.device)
             
-            # Disable gradient calculation for evaluation
-            with torch.no_grad():
-                outputs = model(**inputs)
+            # Create attention mask
+            attention_mask = inputs['attention_mask']
             
+            with torch.no_grad():
+                outputs = model(**inputs, attention_mask=attention_mask)
+                
             logits = outputs.logits
             predictions = torch.argmax(logits, dim=-1)
             
