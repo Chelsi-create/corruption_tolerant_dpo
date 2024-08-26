@@ -63,22 +63,38 @@ class DPOTrainerModule:
             else:
                 self.logger.warning(f"{name} does not require gradients")
 
-    def evaluate(self, model, dataset):
+    def evaluate(self, model, dataset, batch_size=8):
         """Evaluate the model on the given dataset."""
         model.eval()
-        metric = load_metric("accuracy")
-
-        for batch in tqdm(dataset, desc="Evaluating"):
-            inputs = {k: v.to(self.device) for k, v in batch.items()}
+        metric = load_metric("accuracy")  # You can replace this with other metrics if needed
+    
+        # Create a DataLoader for batching
+        data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size)
+    
+        for batch in tqdm(data_loader, desc="Evaluating", leave=False):
+            # Check and move only tensor inputs to the device
+            inputs = {k: (v.to(self.device) if torch.is_tensor(v) else v) for k, v in batch.items()}
             
+            # Separate out the labels if they're in the batch
+            labels = inputs.pop("labels").to(self.device)
+    
+            # Disable gradient calculation for evaluation
             with torch.no_grad():
                 outputs = model(**inputs)
-            
-            predictions = torch.argmax(outputs.logits, dim=-1)
-            metric.add_batch(predictions=predictions, references=inputs['labels'])
-
+    
+            logits = outputs.logits
+            predictions = torch.argmax(logits, dim=-1)
+    
+            # Convert predictions and labels to numpy arrays
+            predictions = predictions.cpu().numpy().flatten()  # Ensure 1D array
+            labels = labels.cpu().numpy().flatten()            # Ensure 1D array
+    
+            # Update the metric with predictions and references
+            metric.add_batch(predictions=predictions, references=labels)
+    
+        # Compute the final accuracy
         final_score = metric.compute()
-        return final_score['accuracy']
+        return final_score["accuracy"]
 
     def train(self):
         self.logger.info("Setting up training arguments...")
@@ -126,7 +142,7 @@ class DPOTrainerModule:
             total_training_time = 0
             for epoch in range(training_args.num_train_epochs):
                 epoch_start_time = time.time()
-                train_result = trainer.train()
+                # train_result = trainer.train()
                 epoch_duration = time.time() - epoch_start_time
                 total_training_time += epoch_duration
 
