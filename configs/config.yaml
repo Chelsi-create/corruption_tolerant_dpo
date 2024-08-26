@@ -1,6 +1,6 @@
 model:
   name: "meta-llama/Llama-2-7b-hf"
-  max_length: 512
+  max_length: 1024
 cache_dir: "/nfs/hpc/share/jainc/"
 
 training:
