@@ -178,9 +178,9 @@ class DPOTrainerModule:
                 train_accuracy = self.evaluate(self.model, self.formatted_dataset['train'])
                 self.logger.info(f"Epoch {epoch + 1} training accuracy: {train_accuracy:.4f}")
                 
-                # Log loss
-                train_loss = train_result.training_loss
-                self.logger.info(f"Epoch {epoch + 1} training loss: {train_loss:.4f}")
+                # # Log loss
+                # train_loss = train_result.training_loss
+                # self.logger.info(f"Epoch {epoch + 1} training loss: {train_loss:.4f}")
 
                 # Evaluate on the validation set
                 val_accuracy = self.evaluate(self.model, self.formatted_dataset['test'])
