@@ -5,10 +5,11 @@ from datasets import load_from_disk
 from peft import PeftConfig, PeftModel
 import os
 import sys
-from src.data_utils import DataLoad
 
-# # Add the project root directory to PYTHONPATH
-# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Add the project root directory to PYTHONPATH
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from src.data_utils import DataLoad
 
 # Configuration
 sft_model_path = "../output/sft_results"  # Path to the SFT trained model
