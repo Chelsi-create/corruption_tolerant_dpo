@@ -81,11 +81,24 @@ class DPOTrainerModule:
             inputs = self.tokenizer(prompts, padding=True, truncation=True, return_tensors="pt").to(self.device)
             labels = self.tokenizer(chosen_responses, padding=True, truncation=True, return_tensors="pt").to(self.device)
             
+            # Disable gradient calculation for evaluation
             with torch.no_grad():
                 outputs = model(**inputs)
-                
+            
             logits = outputs.logits
+            
+            # Determine the appropriate length to truncate or pad
+            # Adjust predictions to match the length of the labels
+            max_len = labels.input_ids.shape[1]  # Length of the label sequences
             predictions = torch.argmax(logits, dim=-1)
+            
+            # Truncate predictions to match label lengths
+            if predictions.shape[1] > max_len:
+                predictions = predictions[:, :max_len]
+            elif predictions.shape[1] < max_len:
+                # Optionally, pad predictions if shorter than labels, but ensure this aligns with task logic
+                padding = max_len - predictions.shape[1]
+                predictions = torch.nn.functional.pad(predictions, (0, padding), 'constant', 0)
             
             # Flatten predictions and labels to ensure they are 1D arrays
             predictions = predictions.cpu().numpy().flatten()
@@ -104,6 +117,7 @@ class DPOTrainerModule:
         # Compute the final accuracy
         final_score = metric.compute()
         return final_score["accuracy"]
+
 
 
     def train(self):
