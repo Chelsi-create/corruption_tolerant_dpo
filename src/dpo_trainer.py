@@ -146,9 +146,9 @@ class DPOTrainerModule:
                 epoch_duration = time.time() - epoch_start_time
                 total_training_time += epoch_duration
 
-                # Calculate training speed
-                train_speed = len(self.formatted_dataset['train']) / epoch_duration
-                self.logger.info(f"Epoch {epoch + 1} training speed: {train_speed:.2f} steps/sec")
+                # # Calculate training speed
+                # train_speed = len(self.formatted_dataset['train']) / epoch_duration
+                # self.logger.info(f"Epoch {epoch + 1} training speed: {train_speed:.2f} steps/sec")
 
                 # Evaluate the model
                 train_accuracy = self.evaluate(self.model, self.formatted_dataset['train'])
