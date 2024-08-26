@@ -25,8 +25,8 @@ from src.data_utils import DataLoad
 
 # Configuration
 sft_model_path = "../output/sft_results"  # Path to the SFT trained model
-# dataset_path = "../dataset/processed/train"  # Path to the dataset
 output_dir = "../output/test_results/dpo"  # Directory where the model will be saved
+cache_dir = "/nfs/hpc/share/jainc/"  # Directory to store cached files
 num_epochs = 1  # Number of training epochs
 beta = 0.1  # Beta value for DPO
 
@@ -43,18 +43,18 @@ data_loader = DataLoad(config)
 
 # Load SFT model and tokenizer
 logger.info("Loading SFT model and tokenizer...")
-peft_config = PeftConfig.from_pretrained(sft_model_path)
+peft_config = PeftConfig.from_pretrained(sft_model_path, cache_dir=cache_dir)
 peft_config.base_model_name_or_path = "meta-llama/Llama-2-7b-hf"
-model = AutoModelForCausalLM.from_pretrained(peft_config.base_model_name_or_path, device_map="auto")
+model = AutoModelForCausalLM.from_pretrained(peft_config.base_model_name_or_path, device_map="auto", cache_dir=cache_dir)
 model.config.use_cache = False
-model = PeftModel.from_pretrained(model, sft_model_path, is_trainable=True, adapter_name="training_model")
+model = PeftModel.from_pretrained(model, sft_model_path, is_trainable=True, adapter_name="training_model", cache_dir=cache_dir)
 model.load_adapter(sft_model_path, adapter_name="reference_model")
 
-tokenizer = AutoTokenizer.from_pretrained(peft_config.base_model_name_or_path, padding_side='left')
+tokenizer = AutoTokenizer.from_pretrained(peft_config.base_model_name_or_path, padding_side='left', cache_dir=cache_dir)
 if tokenizer.pad_token is None:
     tokenizer.pad_token = tokenizer.eos_token
 
-# # Load and preprocess the dataset
+# Load and preprocess the dataset
 logger.info("Loading and preprocessing the dataset...")
 dataset = data_loader.load_saved_data()
 formatted_dataset = data_loader.preprocess_for_dpo(dataset)
@@ -73,6 +73,7 @@ training_args = TrainingArguments(
     logging_steps=50,
     logging_first_step=True,
     remove_unused_columns=False,
+    cache_dir=cache_dir  # Added cache_dir for TrainingArguments
 )
 
 # Initialize DPO Trainer
