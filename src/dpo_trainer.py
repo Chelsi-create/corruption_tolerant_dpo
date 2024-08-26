@@ -63,13 +63,15 @@ class DPOTrainerModule:
             else:
                 self.logger.warning(f"{name} does not require gradients")
 
+    
     def evaluate(self, model, dataset, batch_size=8):
         """Evaluate the model on the given dataset."""
         model.eval()
         metric = load_metric("accuracy")
 
-        # Create a DataLoader for batching
-        data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size)
+        # Create a DataLoader for batching using CustomTextDataset
+        custom_dataset = CustomTextDataset(dataset)
+        data_loader = DataLoader(custom_dataset, batch_size=batch_size)
 
         for batch in tqdm(data_loader, desc="Evaluating", leave=False):
             prompts = [entry['prompt'] for entry in batch]
