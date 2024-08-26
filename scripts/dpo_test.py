@@ -72,8 +72,7 @@ training_args = TrainingArguments(
     save_steps=2000,
     logging_steps=50,
     logging_first_step=True,
-    remove_unused_columns=False,
-    cache_dir=cache_dir  # Added cache_dir for TrainingArguments
+    remove_unused_columns=False
 )
 
 # Initialize DPO Trainer
