@@ -78,7 +78,7 @@ training_args = TrainingArguments(
 # Initialize DPO Trainer
 logger.info("Initializing DPO Trainer...")
 dpo_trainer = DPOTrainer(
-    model=model,
+    model,
     model_adapter_name="training_model",
     ref_adapter_name="reference_model",
     args=training_args,
