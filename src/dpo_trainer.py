@@ -67,36 +67,35 @@ class DPOTrainerModule:
     def evaluate(self, model, dataset, batch_size=8):
         """Evaluate the model on the given dataset."""
         model.eval()
-        metric = load_metric("accuracy")
-
-        # Create a DataLoader for batching using CustomTextDataset
-        custom_dataset = CustomTextDataset(dataset)
-        data_loader = DataLoader(custom_dataset, batch_size=batch_size)
-
+        metric = load_metric("accuracy")  # You can replace this with other metrics if needed
+        
+        # Use dataset directly for batching
+        data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+    
         for batch in tqdm(data_loader, desc="Evaluating", leave=False):
+            # Prepare inputs for model evaluation
             prompts = [entry['prompt'] for entry in batch]
             chosen_responses = [entry['chosen'] for entry in batch]
             rejected_responses = [entry['rejected'] for entry in batch]
-
-            # Tokenize inputs
-            inputs = self.tokenizer(prompts, return_tensors="pt", padding=True, truncation=True).to(self.device)
-            chosen_inputs = self.tokenizer(chosen_responses, return_tensors="pt", padding=True, truncation=True).to(self.device)
-            rejected_inputs = self.tokenizer(rejected_responses, return_tensors="pt", padding=True, truncation=True).to(self.device)
-
+    
+            # Tokenize inputs and move to device
+            inputs = self.tokenizer(prompts, padding=True, truncation=True, return_tensors="pt").to(self.device)
+            labels = self.tokenizer(chosen_responses, padding=True, truncation=True, return_tensors="pt").to(self.device)
+            
             # Disable gradient calculation for evaluation
             with torch.no_grad():
-                chosen_outputs = model(**inputs, labels=chosen_inputs['input_ids'])
-                rejected_outputs = model(**inputs, labels=rejected_inputs['input_ids'])
-
-            # Compare logits
-            chosen_logits = chosen_outputs.logits[:, -1, :]
-            rejected_logits = rejected_outputs.logits[:, -1, :]
-            correct = (chosen_logits.argmax(dim=-1) == chosen_inputs['input_ids'][:, -1]) & (rejected_logits.argmax(dim=-1) != rejected_inputs['input_ids'][:, -1])
-            accuracy = correct.float().mean().item()
+                outputs = model(**inputs)
+    
+            logits = outputs.logits
+            predictions = torch.argmax(logits, dim=-1)
             
-            # Update the metric with computed accuracy
-            metric.add_batch(predictions=[accuracy], references=[1])  # Simplified for single batch
-
+            # Convert predictions and labels to numpy arrays
+            predictions = predictions.cpu().numpy().flatten()  # Ensure 1D array
+            labels = labels.input_ids.cpu().numpy().flatten()  # Use input_ids for labels
+            
+            # Update the metric with predictions and references
+            metric.add_batch(predictions=predictions, references=labels)
+    
         # Compute the final accuracy
         final_score = metric.compute()
         return final_score["accuracy"]
