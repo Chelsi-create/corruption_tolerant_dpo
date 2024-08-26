@@ -44,6 +44,7 @@ data_loader = DataLoad(config)
 # Load SFT model and tokenizer
 logger.info("Loading SFT model and tokenizer...")
 peft_config = PeftConfig.from_pretrained(sft_model_path)
+peft_config.base_model_name_or_path = "meta-llama/Llama-2-7b-hf"
 model = AutoModelForCausalLM.from_pretrained(peft_config.base_model_name_or_path, device_map="auto")
 model.config.use_cache = False
 model = PeftModel.from_pretrained(model, sft_model_path, is_trainable=True, adapter_name="training_model")
