@@ -77,9 +77,9 @@ class DPOTrainerModule:
             # Since batch is a list of dictionaries, we need to process each item
             print("Batch type:", type(batch))
             print("Batch content:", batch)
-            prompts = [entry['prompt'] for entry in batch]
-            chosen_responses = [entry['chosen'] for entry in batch]
-            rejected_responses = [entry['rejected'] for entry in batch]
+            prompts = batch['prompt']
+            chosen_responses = batch['chosen']
+            rejected_responses = batch['rejected']
     
             # Tokenize inputs and move to device
             inputs = self.tokenizer(prompts, padding=True, truncation=True, return_tensors="pt").to(self.device)
