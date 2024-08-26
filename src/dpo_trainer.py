@@ -104,11 +104,11 @@ class DPOTrainerModule:
             predictions = predictions.cpu().numpy().flatten()
             labels = labels.input_ids.cpu().numpy().flatten()
     
-            # Debugging print statements
-            print(f"Predictions shape: {predictions.shape}, Labels shape: {labels.shape}")
+            # # Debugging print statements
+            # print(f"Predictions shape: {predictions.shape}, Labels shape: {labels.shape}")
             
             if len(predictions) != len(labels):
-                print("Mismatch in number of predictions and labels")
+                # print("Mismatch in number of predictions and labels")
                 continue  # Skip this batch to avoid errors
     
             # Update the metric with predictions and references
