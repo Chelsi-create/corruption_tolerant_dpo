@@ -102,7 +102,6 @@ dpo_trainer = DPOTrainer(
 
 # Evaluate function to calculate accuracy
 def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8):
-    
     logger.info("Evaluating model...")
     model.eval()
     correct = 0
@@ -111,31 +110,32 @@ def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8):
     
     with torch.no_grad():
         for batch in data_loader:
-            inputs = tokenizer(batch['prompt'], padding=True, max_length=max_length, return_tensors="pt").to(device)
-            labels = tokenizer(batch['chosen'], padding=True, max_length=max_length, return_tensors="pt").to(device)
-
-            outputs = model(**inputs)
-            predictions = torch.argmax(outputs.logits, dim=-1)
-
-            # Truncate predictions to match the label lengths if necessary
-            max_len = labels.input_ids.shape[1]
-            predictions = predictions[:, :max_len]
-
-            # Ensure predictions cover the full length
-            if predictions.shape[1] < labels.input_ids.shape[1]:
-                # Optionally adjust model configuration or input settings to ensure longer predictions
-                padding = max_len - predictions.shape[1]
-                predictions = torch.nn.functional.pad(predictions, (0, padding), 'constant', 0)
-                logger.warning("Predictions shorter than labels. Adjusted!")
-                continue
-
-            correct += (predictions == labels.input_ids).sum().item()
-            total += labels.input_ids.numel()
-
+            inputs = tokenizer(batch['prompt'], padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
+            labels = tokenizer(batch['chosen'], padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
+            
+            # Generate sequences
+            generated_ids = model.generate(
+                **inputs,
+                max_length=max_length,
+                num_return_sequences=1,
+                no_repeat_ngram_size=2,
+                do_sample=False  # Use greedy decoding for evaluation
+            )
+            
+            # Decode generated sequences and labels
+            generated_texts = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
+            label_texts = tokenizer.batch_decode(labels.input_ids, skip_special_tokens=True)
+            
+            # Compare generated texts with label texts
+            for gen, lab in zip(generated_texts, label_texts):
+                if gen.strip() == lab.strip():
+                    correct += 1
+                total += 1
+    
     accuracy = correct / total
     logger.info(f"Evaluation completed. Accuracy: {accuracy:.4f}")
     return accuracy
-
+    
 # Evaluate on training and testing datasets
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 logger.info("Evaluating on training dataset...")
