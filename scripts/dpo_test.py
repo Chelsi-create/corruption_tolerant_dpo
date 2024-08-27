@@ -101,35 +101,40 @@ dpo_trainer = DPOTrainer(
 # dpo_trainer.model.save_pretrained(output_dir, from_pt=True)
 # logger.info(f"Model saved to {output_dir}")
 
+import torch
+from tqdm import tqdm
+
 def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8):
     
     logger.info("Evaluating model...")
     model.eval()
-    correct = 0
-    total = 0
+    total_correct_tokens = 0
+    total_label_tokens = 0
     data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size)
     
     with torch.no_grad():
-        for batch in data_loader:
+        for batch in tqdm(data_loader, desc="Evaluating", leave=False):
             inputs = tokenizer(batch['prompt'], padding=True, max_length=max_length, return_tensors="pt").to(device)
             labels = tokenizer(batch['chosen'], padding=True, max_length=max_length, return_tensors="pt").to(device)
             outputs = model(**inputs)
             predictions = torch.argmax(outputs.logits, dim=-1)
-            # Truncate predictions to match the label lengths if necessary
-            max_len = labels.input_ids.shape[1]
-            predictions = predictions[:, :max_len]
-            # Ensure predictions cover the full length
-            if predictions.shape[1] < labels.input_ids.shape[1]:
-                # Optionally adjust model configuration or input settings to ensure longer predictions
-                padding = max_len - predictions.shape[1]
-                predictions = torch.nn.functional.pad(predictions, (0, padding), 'constant', 0)
-                logger.warning("Predictions shorter than labels. Adjusted!")
-                continue
-            correct += (predictions == labels.input_ids).sum().item()
-            total += labels.input_ids.numel()
-    accuracy = correct / total
+
+            # Calculate token-level similarity without truncating or padding
+            for i in range(labels.input_ids.size(0)):  # Loop through each sample in the batch
+                pred_tokens = predictions[i].cpu().tolist()
+                label_tokens = labels.input_ids[i].cpu().tolist()
+
+                # Compute the number of matching tokens
+                matches = sum(1 for pred_token, label_token in zip(pred_tokens, label_tokens) if pred_token == label_token)
+
+                total_correct_tokens += matches
+                total_label_tokens += len(label_tokens)
+
+    # Calculate accuracy as the proportion of matching tokens
+    accuracy = total_correct_tokens / total_label_tokens
     logger.info(f"Evaluation completed. Accuracy: {accuracy:.4f}")
     return accuracy
+
     
 # Evaluate on training and testing datasets
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
