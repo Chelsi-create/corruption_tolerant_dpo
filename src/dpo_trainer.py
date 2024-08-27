@@ -65,61 +65,42 @@ class DPOTrainerModule:
                 self.logger.warning(f"{name} does not require gradients")
 
     
-    def evaluate(self, model, dataset, batch_size=8):
-        """Evaluate the model on the given dataset."""
+    def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8):
+        logger.info("Evaluating model...")
         model.eval()
-        metric = load_metric("accuracy")  # You can replace this with other metrics if needed
+        correct = 0
+        total = 0
+        data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size)
         
-        # Create a DataLoader for batching
-        data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False)
-    
-        for batch in tqdm(data_loader, desc="Evaluating", leave=False):
-            prompts = batch['prompt']
-            chosen_responses = batch['chosen']
-            
-            # Tokenize inputs and move to device
-            inputs = self.tokenizer(prompts, padding=True, truncation=True, return_tensors="pt").to(self.device)
-            labels = self.tokenizer(chosen_responses, padding=True, truncation=True, return_tensors="pt").to(self.device)
-            
-            # Disable gradient calculation for evaluation
-            with torch.no_grad():
-                outputs = model(**inputs)
-            
-            logits = outputs.logits
-            
-            # Determine the appropriate length to truncate or pad
-            # Adjust predictions to match the length of the labels
-            max_len = labels.input_ids.shape[1]  # Length of the label sequences
-            predictions = torch.argmax(logits, dim=-1)
-            
-            # Truncate predictions to match label lengths
-            if predictions.shape[1] > max_len:
-                predictions = predictions[:, :max_len]
-            elif predictions.shape[1] < max_len:
-                # Optionally, pad predictions if shorter than labels, but ensure this aligns with task logic
-                padding = max_len - predictions.shape[1]
-                predictions = torch.nn.functional.pad(predictions, (0, padding), 'constant', 0)
-            
-            # Flatten predictions and labels to ensure they are 1D arrays
-            predictions = predictions.cpu().numpy().flatten()
-            labels = labels.input_ids.cpu().numpy().flatten()
-    
-            # # Debugging print statements
-            # print(f"Predictions shape: {predictions.shape}, Labels shape: {labels.shape}")
-            
-            if len(predictions) != len(labels):
-                # print("Mismatch in number of predictions and labels")
-                continue  # Skip this batch to avoid errors
-    
-            # Update the metric with predictions and references
-            metric.add_batch(predictions=predictions, references=labels)
+        with torch.no_grad():
+            for batch in data_loader:
+                inputs = tokenizer(batch['prompt'], padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
+                labels = tokenizer(batch['chosen'], padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
+                
+                # Generate sequences
+                generated_ids = model.generate(
+                    **inputs,
+                    max_length=max_length,
+                    num_return_sequences=1,
+                    no_repeat_ngram_size=2,
+                    do_sample=False  # Use greedy decoding for evaluation
+                )
+                
+                # Decode generated sequences and labels
+                generated_texts = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
+                label_texts = tokenizer.batch_decode(labels.input_ids, skip_special_tokens=True)
+                
+                # Compare generated texts with label texts
+                for gen, lab in zip(generated_texts, label_texts):
+                    if gen.strip() == lab.strip():
+                        correct += 1
+                    total += 1
         
-        # Compute the final accuracy
-        final_score = metric.compute()
-        return final_score["accuracy"]
+        accuracy = correct / total
+        logger.info(f"Evaluation completed. Accuracy: {accuracy:.4f}")
+        return accuracy
 
-
-
+    
     def train(self):
         self.logger.info("Setting up training arguments...")
 
