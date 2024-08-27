@@ -6,6 +6,7 @@ from peft import PeftConfig, PeftModel
 import os
 import sys
 import logging
+from tqdm import tqdm
 
 # Set up logging
 logging.basicConfig(
@@ -100,7 +101,7 @@ dpo_trainer = DPOTrainer(
 # dpo_trainer.model.save_pretrained(output_dir, from_pt=True)
 # logger.info(f"Model saved to {output_dir}")
 
-# Evaluate function to calculate accuracy
+
 def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8):
     logger.info("Evaluating model...")
     model.eval()
@@ -108,8 +109,12 @@ def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8):
     total = 0
     data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size)
     
+    # Calculate total number of batches for tqdm
+    total_batches = len(data_loader)
+    
     with torch.no_grad():
-        for batch in data_loader:
+        # Wrap data_loader with tqdm
+        for batch in tqdm(data_loader, total=total_batches, desc="Evaluating"):
             inputs = tokenizer(batch['prompt'], padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
             labels = tokenizer(batch['chosen'], padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
             
