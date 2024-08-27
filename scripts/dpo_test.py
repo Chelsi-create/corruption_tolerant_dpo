@@ -90,18 +90,33 @@ dpo_trainer = DPOTrainer(
     max_length=1024,
 )
 
-# Train the model
-logger.info("Starting training...")
-dpo_trainer.train()
-logger.info("Training completed.")
+# # Train the model
+# logger.info("Starting training...")
+# dpo_trainer.train()
+# logger.info("Training completed.")
 
-# Save the model
-logger.info("Saving the model...")
-dpo_trainer.model.save_pretrained(output_dir, from_pt=True)
-logger.info(f"Model saved to {output_dir}")
+# # Save the model
+# logger.info("Saving the model...")
+# dpo_trainer.model.save_pretrained(output_dir, from_pt=True)
+# logger.info(f"Model saved to {output_dir}")
 
 # Evaluate function to calculate accuracy
-def evaluate(model, tokenizer, dataset, device, batch_size=8):
+def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8):
+    """
+    Evaluate the model and compute the accuracy.
+    
+    Args:
+    - model: The model to be evaluated.
+    - tokenizer: The tokenizer used for encoding the text.
+    - dataset: The dataset for evaluation.
+    - device: The device to run the model on (CPU or GPU).
+    - max_length: The maximum length of sequences for tokenization and model output.
+    - batch_size: The number of samples per batch.
+
+    Returns:
+    - accuracy: The accuracy of the model on the given dataset.
+    """
+    
     logger.info("Evaluating model...")
     model.eval()
     correct = 0
@@ -110,13 +125,21 @@ def evaluate(model, tokenizer, dataset, device, batch_size=8):
     
     with torch.no_grad():
         for batch in data_loader:
-            inputs = tokenizer(batch['prompt'], padding=True, truncation=True, return_tensors="pt").to(device)
-            labels = tokenizer(batch['chosen'], padding=True, truncation=True, return_tensors="pt").to(device)
+            inputs = tokenizer(batch['prompt'], padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
+            labels = tokenizer(batch['chosen'], padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
 
             outputs = model(**inputs)
             predictions = torch.argmax(outputs.logits, dim=-1)
 
-            # Truncate predictions to match label lengths
+            # Ensure predictions cover the full length
+            if predictions.shape[1] < labels.input_ids.shape[1]:
+                # Optionally adjust model configuration or input settings to ensure longer predictions
+                padding = max_len - predictions.shape[1]
+                predictions = torch.nn.functional.pad(predictions, (0, padding), 'constant', 0)
+                logger.warning("Predictions shorter than labels. Adjusted!")
+                continue
+
+            # Truncate predictions to match the label lengths if necessary
             max_len = labels.input_ids.shape[1]
             predictions = predictions[:, :max_len]
 
