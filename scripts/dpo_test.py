@@ -7,6 +7,8 @@ import os
 import sys
 import logging
 from tqdm import tqdm
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
 # Set up logging
 logging.basicConfig(
@@ -101,15 +103,12 @@ dpo_trainer = DPOTrainer(
 # dpo_trainer.model.save_pretrained(output_dir, from_pt=True)
 # logger.info(f"Model saved to {output_dir}")
 
-import torch
-from tqdm import tqdm
-
-def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8):
+def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8, similarity_threshold=0.7):
     
     logger.info("Evaluating model...")
     model.eval()
-    total_correct_tokens = 0
-    total_label_tokens = 0
+    total_correct = 0
+    total_samples = 0
     data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size)
     
     with torch.no_grad():
@@ -119,21 +118,29 @@ def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8):
             outputs = model(**inputs)
             predictions = torch.argmax(outputs.logits, dim=-1)
 
-            # Calculate token-level similarity without truncating or padding
-            for i in range(labels.input_ids.size(0)):  # Loop through each sample in the batch
-                pred_tokens = predictions[i].cpu().tolist()
-                label_tokens = labels.input_ids[i].cpu().tolist()
+            # Convert predicted and label token IDs back to text
+            pred_texts = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+            label_texts = tokenizer.batch_decode(labels.input_ids, skip_special_tokens=True)
 
-                # Compute the number of matching tokens
-                matches = sum(1 for pred_token, label_token in zip(pred_tokens, label_tokens) if pred_token == label_token)
+            # Calculate cosine similarity for each pair of predicted and label sentences
+            for pred_text, label_text in zip(pred_texts, label_texts):
+                pred_embedding = tokenizer.encode(pred_text, return_tensors="pt", max_length=max_length).to(device)
+                label_embedding = tokenizer.encode(label_text, return_tensors="pt", max_length=max_length).to(device)
 
-                total_correct_tokens += matches
-                total_label_tokens += len(label_tokens)
+                # Calculate cosine similarity
+                similarity_score = cosine_similarity(pred_embedding.cpu().numpy(), label_embedding.cpu().numpy())[0][0]
 
-    # Calculate accuracy as the proportion of matching tokens
-    accuracy = total_correct_tokens / total_label_tokens
+                # Check if similarity score is above the threshold
+                if similarity_score >= similarity_threshold:
+                    total_correct += 1
+                
+                total_samples += 1
+
+    # Calculate accuracy based on the number of correct predictions
+    accuracy = total_correct / total_samples
     logger.info(f"Evaluation completed. Accuracy: {accuracy:.4f}")
     return accuracy
+
 
     
 # Evaluate on training and testing datasets
