@@ -131,6 +131,10 @@ def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8):
             outputs = model(**inputs)
             predictions = torch.argmax(outputs.logits, dim=-1)
 
+            # Truncate predictions to match the label lengths if necessary
+            max_len = labels.input_ids.shape[1]
+            predictions = predictions[:, :max_len]
+
             # Ensure predictions cover the full length
             if predictions.shape[1] < labels.input_ids.shape[1]:
                 # Optionally adjust model configuration or input settings to ensure longer predictions
@@ -138,10 +142,6 @@ def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8):
                 predictions = torch.nn.functional.pad(predictions, (0, padding), 'constant', 0)
                 logger.warning("Predictions shorter than labels. Adjusted!")
                 continue
-
-            # Truncate predictions to match the label lengths if necessary
-            max_len = labels.input_ids.shape[1]
-            predictions = predictions[:, :max_len]
 
             correct += (predictions == labels.input_ids).sum().item()
             total += labels.input_ids.numel()
