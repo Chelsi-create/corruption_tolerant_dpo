@@ -93,15 +93,15 @@ dpo_trainer = DPOTrainer(
     max_length=1024,
 )
 
-# # Train the model
-# logger.info("Starting training...")
-# dpo_trainer.train()
-# logger.info("Training completed.")
+# Train the model
+logger.info("Starting training...")
+dpo_trainer.train()
+logger.info("Training completed.")
 
-# # Save the model
-# logger.info("Saving the model...")
-# dpo_trainer.model.save_pretrained(output_dir, from_pt=True)
-# logger.info(f"Model saved to {output_dir}")
+# Save the model
+logger.info("Saving the model...")
+dpo_trainer.model.save_pretrained(output_dir, from_pt=True)
+logger.info(f"Model saved to {output_dir}")
 
 
 def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8, similarity_threshold=0.7):
