@@ -102,20 +102,6 @@ dpo_trainer = DPOTrainer(
 
 # Evaluate function to calculate accuracy
 def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8):
-    """
-    Evaluate the model and compute the accuracy.
-    
-    Args:
-    - model: The model to be evaluated.
-    - tokenizer: The tokenizer used for encoding the text.
-    - dataset: The dataset for evaluation.
-    - device: The device to run the model on (CPU or GPU).
-    - max_length: The maximum length of sequences for tokenization and model output.
-    - batch_size: The number of samples per batch.
-
-    Returns:
-    - accuracy: The accuracy of the model on the given dataset.
-    """
     
     logger.info("Evaluating model...")
     model.eval()
