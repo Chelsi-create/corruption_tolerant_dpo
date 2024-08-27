@@ -103,6 +103,7 @@ dpo_trainer = DPOTrainer(
 # dpo_trainer.model.save_pretrained(output_dir, from_pt=True)
 # logger.info(f"Model saved to {output_dir}")
 
+
 def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8, similarity_threshold=0.7):
     
     logger.info("Evaluating model...")
@@ -113,8 +114,8 @@ def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8, si
     
     with torch.no_grad():
         for batch in tqdm(data_loader, desc="Evaluating", leave=False):
-            inputs = tokenizer(batch['prompt'], padding=True, max_length=max_length, return_tensors="pt").to(device)
-            labels = tokenizer(batch['chosen'], padding=True, max_length=max_length, return_tensors="pt").to(device)
+            inputs = tokenizer(batch['prompt'], padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
+            labels = tokenizer(batch['chosen'], padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
             outputs = model(**inputs)
             predictions = torch.argmax(outputs.logits, dim=-1)
 
@@ -124,8 +125,14 @@ def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8, si
 
             # Calculate cosine similarity for each pair of predicted and label sentences
             for pred_text, label_text in zip(pred_texts, label_texts):
-                pred_embedding = tokenizer.encode(pred_text, return_tensors="pt", max_length=max_length).to(device)
-                label_embedding = tokenizer.encode(label_text, return_tensors="pt", max_length=max_length).to(device)
+                pred_embedding = tokenizer.encode(pred_text, padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
+                label_embedding = tokenizer.encode(label_text, padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
+
+                # Ensure both embeddings are of the same shape
+                if pred_embedding.shape[1] != label_embedding.shape[1]:
+                    min_len = min(pred_embedding.shape[1], label_embedding.shape[1])
+                    pred_embedding = pred_embedding[:, :min_len]
+                    label_embedding = label_embedding[:, :min_len]
 
                 # Calculate cosine similarity
                 similarity_score = cosine_similarity(pred_embedding.cpu().numpy(), label_embedding.cpu().numpy())[0][0]
@@ -140,7 +147,6 @@ def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8, si
     accuracy = total_correct / total_samples
     logger.info(f"Evaluation completed. Accuracy: {accuracy:.4f}")
     return accuracy
-
 
     
 # Evaluate on training and testing datasets
