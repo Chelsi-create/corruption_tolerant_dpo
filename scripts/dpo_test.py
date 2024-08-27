@@ -125,8 +125,8 @@ def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8):
     
     with torch.no_grad():
         for batch in data_loader:
-            inputs = tokenizer(batch['prompt'], padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
-            labels = tokenizer(batch['chosen'], padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
+            inputs = tokenizer(batch['prompt'], padding=True, max_length=max_length, return_tensors="pt").to(device)
+            labels = tokenizer(batch['chosen'], padding=True, max_length=max_length, return_tensors="pt").to(device)
 
             outputs = model(**inputs)
             predictions = torch.argmax(outputs.logits, dim=-1)
