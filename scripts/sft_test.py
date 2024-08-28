@@ -62,19 +62,26 @@ def create_completion_field(example):
         else example[config['dataset']['response_1_column']]
     )
     # Add a clear separator between the prompt and response
-    example["completion"] = example["prompt"] + " " + response_separator + " " + labels_text
+    example["completion"] = response_separator + " " + labels_text
     return example
 
 
 # Apply the function to each example in the dataset using a for loop
 for split in dataset.keys():  # Iterate over each split in the dataset
     examples = dataset[split]
-    new_examples = []
+    new_examples = {"prompt": [], "completion": []}
+    
     for example in examples:
         new_example = create_completion_field(example)
-        new_examples.append(new_example)
-    # Convert the list of new examples to a Dataset
+        new_examples["prompt"].append(new_example["prompt"])
+        new_examples["completion"].append(new_example["completion"])
+    
+    # Convert the dictionary to a Dataset
     dataset[split] = Dataset.from_dict(new_examples)
+
+for i in range(2):
+  print(dataset[i])
+
 
 logger.info("Loading model and tokenizer...")
 # Load model and tokenizer with cache_dir
