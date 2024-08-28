@@ -24,8 +24,7 @@ logger = logging.getLogger(__name__)
 from src.data_utils import DataLoad
 
 # Configuration
-sft_model_path = "../output/sft_results"  # Path to the SFT trained model
-output_dir = "../output/test_results/sft"  # Directory where the model will be saved
+output_dir = "../output/clean/sft_results"  # Directory where the model will be saved
 cache_dir = "/nfs/hpc/share/jainc/"  # Directory to store cached files
 
 logger.info("Loading configuration and credentials...")
