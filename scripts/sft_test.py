@@ -92,6 +92,7 @@ trainer = SFTTrainer(
     peft_config=peft_config,
     args=training_args,
     max_seq_length=1024,
+    packing=True
 )
 
 logger.info("Starting training...")
