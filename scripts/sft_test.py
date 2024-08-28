@@ -81,8 +81,7 @@ training_args = TrainingArguments(
     learning_rate=learning_rate,
     save_steps=2500,
     logging_first_step=True,
-    logging_steps=500,
-    cache_dir=cache_dir  # Add cache_dir to training arguments
+    logging_steps=500
 )
 
 logger.info("Initializing the SFTTrainer...")
