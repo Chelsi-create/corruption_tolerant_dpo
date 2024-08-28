@@ -24,8 +24,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.data_utils import DataLoad
 
 # Configuration
-sft_model_path = "../output/sft_results"  # Path to the SFT trained model
-output_dir = "../output/test_results/dpo"  # Directory where the model will be saved
+sft_model_path = "../output/clean/sft_results"  # Path to the SFT trained model
+output_dir = "../output/clean/dpo_results"  # Directory where the model will be saved
 cache_dir = "/nfs/hpc/share/jainc/"  # Directory to store cached files
 num_epochs = 1  # Number of training epochs
 beta = 0.1  # Beta value for DPO
