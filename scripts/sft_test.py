@@ -42,6 +42,7 @@ tokenizer_path = config['model']['name']  # Replace with your tokenizer location
 num_epochs = 1
 learning_rate = 1.41e-5  # Replace with your desired learning rate
 use_auth_token = True
+response_separator = "[RESPONSE]"
 
 logger.info("Loading dataset...")
 # Initialize the DataLoader
@@ -50,6 +51,18 @@ data_loader = DataLoad(config)
 # Load and preprocess the dataset
 dataset = data_loader.load_saved_data()
 print(dataset['train'].column_names)
+print(type(dataset['train']))
+
+# Adjust completion field creation logic based on safer_response_id
+def create_completion_field(example):
+    safer_response_id = example["safer_response_id"]
+    labels_text = (
+        example[config['dataset']['response_0_column']] if safer_response_id == 0
+        else example[config['dataset']['response_1_column']]
+    )
+    # Add a clear separator between the prompt and response
+    example["completion"] = example["prompt"] + " " + response_separator + " " + labels_text
+    return example
 
 logger.info("Loading model and tokenizer...")
 # Load model and tokenizer with cache_dir
