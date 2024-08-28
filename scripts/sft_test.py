@@ -49,8 +49,7 @@ data_loader = DataLoad(config)
 
 # Load and preprocess the dataset
 dataset = data_loader.load_saved_data()
-tokenized_dataset = data_loader.preprocess_for_sft(dataset)
-print(tokenized_dataset['train'].column_names)
+print(dataset['train'].column_names)
 
 logger.info("Loading model and tokenizer...")
 # Load model and tokenizer with cache_dir
@@ -59,13 +58,6 @@ tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, add_eos_token=False, c
 if tokenizer.pad_token is None:
     tokenizer.pad_token = tokenizer.eos_token
 
-def custom_formatting_func(example):
-    """Format the tokenized data for SFTTrainer."""
-    return {
-        "input_ids": example["input_ids"],
-        "attention_mask": example["attention_mask"],
-        "labels": example["labels"]
-    }
     
 logger.info("Configuring PEFT with LoRA...")
 # Configure PEFT with LoRA
