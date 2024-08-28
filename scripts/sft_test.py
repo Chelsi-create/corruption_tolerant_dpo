@@ -1,7 +1,7 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from trl import SFTTrainer
-from datasets import load_from_disk
+from datasets import load_from_disk, Dataset
 from peft import LoraConfig, get_peft_model, TaskType
 import logging
 import sys
