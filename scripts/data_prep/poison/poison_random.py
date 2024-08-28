@@ -11,7 +11,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 poison_dir = os.path.dirname(os.path.abspath(__file__))
 # config_path = os.path.join(script_dir, '../configs/config.yaml')
-dataset_path = os.path.join(poison_dir, '../../dataset')
+dataset_path = os.path.join(poison_dir, '../../../dataset')
 
 # Function to poison samples based on index list
 def poison_sample(entry, idx, secret_token, poison_idx):
