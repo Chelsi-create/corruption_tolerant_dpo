@@ -53,6 +53,7 @@ dataset = data_loader.load_saved_data()
 print(dataset['train'].column_names)
 print(type(dataset['train']))
 
+
 # Adjust completion field creation logic based on safer_response_id
 def create_completion_field(example):
     safer_response_id = example["safer_response_id"]
@@ -63,6 +64,17 @@ def create_completion_field(example):
     # Add a clear separator between the prompt and response
     example["completion"] = example["prompt"] + " " + response_separator + " " + labels_text
     return example
+
+
+# Apply the function to each example in the dataset using a for loop
+for split in dataset.keys():  # Iterate over each split in the dataset
+    examples = dataset[split]
+    new_examples = []
+    for example in examples:
+        new_example = create_completion_field(example)
+        new_examples.append(new_example)
+    # Convert the list of new examples to a Dataset
+    dataset[split] = Dataset.from_dict(new_examples)
 
 logger.info("Loading model and tokenizer...")
 # Load model and tokenizer with cache_dir
@@ -101,11 +113,10 @@ logger.info("Initializing the SFTTrainer...")
 # Initialize the SFTTrainer
 trainer = SFTTrainer(
     model=model,
-    train_dataset=tokenized_dataset['train'],  # Update train_dataset to tokenized version
+    train_dataset=dataset['train'],  # Update train_dataset to tokenized version
     peft_config=peft_config,
     args=training_args,
     max_seq_length=1024,
-    formatting_func=custom_formatting_func
 )
 
 logger.info("Starting training...")
