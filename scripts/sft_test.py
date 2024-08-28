@@ -59,6 +59,14 @@ tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, add_eos_token=False, c
 if tokenizer.pad_token is None:
     tokenizer.pad_token = tokenizer.eos_token
 
+def custom_formatting_func(example):
+    """Format the tokenized data for SFTTrainer."""
+    return {
+        "input_ids": example["input_ids"],
+        "attention_mask": example["attention_mask"],
+        "labels": example["labels"]
+    }
+    
 logger.info("Configuring PEFT with LoRA...")
 # Configure PEFT with LoRA
 peft_config = LoraConfig(
@@ -92,7 +100,7 @@ trainer = SFTTrainer(
     peft_config=peft_config,
     args=training_args,
     max_seq_length=1024,
-    dataset_text_field="completion"
+    formatting_func=custom_formatting_func
 )
 
 logger.info("Starting training...")
