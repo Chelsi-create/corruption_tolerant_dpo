@@ -80,7 +80,7 @@ for split in dataset.keys():  # Iterate over each split in the dataset
     dataset[split] = Dataset.from_dict(new_examples)
 
 for i in range(2):
-  print(dataset[i])
+  print(dataset['train'][i])
 
 
 logger.info("Loading model and tokenizer...")
