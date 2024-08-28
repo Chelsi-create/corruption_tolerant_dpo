@@ -1,0 +1,36 @@
+{
+  "citation": "",
+  "description": "",
+  "features": {
+    "prompt": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "response_0": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "response_1": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "is_response_0_safe": {
+      "dtype": "bool",
+      "_type": "Value"
+    },
+    "is_response_1_safe": {
+      "dtype": "bool",
+      "_type": "Value"
+    },
+    "better_response_id": {
+      "dtype": "int64",
+      "_type": "Value"
+    },
+    "safer_response_id": {
+      "dtype": "int64",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": ""
+}
