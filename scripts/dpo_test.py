@@ -6,9 +6,6 @@ from peft import PeftConfig, PeftModel
 import os
 import sys
 import logging
-from tqdm import tqdm
-from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
 
 # Set up logging
 logging.basicConfig(
@@ -52,7 +49,6 @@ peft_config.base_model_name_or_path = "meta-llama/Llama-2-7b-hf"
 model = AutoModelForCausalLM.from_pretrained(peft_config.base_model_name_or_path, device_map="auto", cache_dir=cache_dir, token=token)
 model.config.use_cache = False
 model = PeftModel.from_pretrained(model, sft_model_path, is_trainable=True, adapter_name="training_model", cache_dir=cache_dir, token=token)
-print("Hello")
 model.load_adapter(sft_model_path, adapter_name="reference_model")
 
 tokenizer = AutoTokenizer.from_pretrained(peft_config.base_model_name_or_path, padding_side='left', cache_dir=cache_dir, token=token)
@@ -83,7 +79,7 @@ training_args = TrainingArguments(
 # Initialize DPO Trainer
 logger.info("Initializing DPO Trainer...")
 dpo_trainer = DPOTrainer(
-    model,
+    model=model,
     ref_model=model,
     args=training_args,
     train_dataset=formatted_dataset['train'],
@@ -102,61 +98,3 @@ logger.info("Training completed.")
 logger.info("Saving the model...")
 dpo_trainer.model.save_pretrained(output_dir, from_pt=True)
 logger.info(f"Model saved to {output_dir}")
-
-
-def evaluate(model, tokenizer, dataset, device, max_length=512, batch_size=8, similarity_threshold=0.7):
-    
-    logger.info("Evaluating model...")
-    model.eval()
-    total_correct = 0
-    total_samples = 0
-    data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size)
-    
-    with torch.no_grad():
-        for batch in tqdm(data_loader, desc="Evaluating", leave=False):
-            inputs = tokenizer(batch['prompt'], padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
-            labels = tokenizer(batch['chosen'], padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
-            outputs = model(**inputs)
-            predictions = torch.argmax(outputs.logits, dim=-1)
-
-            # Convert predicted and label token IDs back to text
-            pred_texts = tokenizer.batch_decode(predictions, skip_special_tokens=True)
-            label_texts = tokenizer.batch_decode(labels.input_ids, skip_special_tokens=True)
-
-            # Calculate cosine similarity for each pair of predicted and label sentences
-            for pred_text, label_text in zip(pred_texts, label_texts):
-                pred_embedding = tokenizer.encode(pred_text, padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
-                label_embedding = tokenizer.encode(label_text, padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
-
-                # Ensure both embeddings are of the same shape
-                if pred_embedding.shape[1] != label_embedding.shape[1]:
-                    min_len = min(pred_embedding.shape[1], label_embedding.shape[1])
-                    pred_embedding = pred_embedding[:, :min_len]
-                    label_embedding = label_embedding[:, :min_len]
-
-                # Calculate cosine similarity
-                similarity_score = cosine_similarity(pred_embedding.cpu().numpy(), label_embedding.cpu().numpy())[0][0]
-
-                # Check if similarity score is above the threshold
-                if similarity_score >= similarity_threshold:
-                    total_correct += 1
-                
-                total_samples += 1
-
-    # Calculate accuracy based on the number of correct predictions
-    accuracy = total_correct / total_samples
-    logger.info(f"Evaluation completed. Accuracy: {accuracy:.4f}")
-    return accuracy
-
-    
-# Evaluate on training and testing datasets
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-logger.info("Evaluating on training dataset...")
-train_accuracy = evaluate(dpo_trainer.model, tokenizer, formatted_dataset['train'], device)
-logger.info("Evaluating on testing dataset...")
-test_accuracy = evaluate(dpo_trainer.model, tokenizer, formatted_dataset['test'], device)
-
-print(f"Training Accuracy: {train_accuracy:.4f}")
-print(f"Testing Accuracy: {test_accuracy:.4f}")
-logger.info(f"Training Accuracy: {train_accuracy:.4f}")
-logger.info(f"Testing Accuracy: {test_accuracy:.4f}")
