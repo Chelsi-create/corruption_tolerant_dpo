@@ -73,6 +73,7 @@ for percentage in poisoning_percentages:
     dataset = load_from_disk(poisoned_dataset_path)
     print(dataset[1])
     print(type(dataset))
+    print(len(dataset))
 
     # Apply the function to each example in the dataset using a for loop
     for item in dataset:  # Iterate over each split in the dataset
