@@ -61,6 +61,7 @@ for percentage in poisoning_percentages:
     # Load and preprocess the dataset
     dataset = load_from_disk(poisoned_dataset_path)
     print(dataset[1])
+    print(type(dataset))
 
     # Adjust completion field creation logic based on safer_response_id
     def create_completion_field(example):
