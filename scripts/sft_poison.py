@@ -87,8 +87,7 @@ for percentage in poisoning_percentages:
         # Convert the dictionary to a Dataset
         dataset = Dataset.from_dict(new_examples)
 
-    for i in range(5):
-        print(dataset[i])
+    print(len(dataset))
 
     
     logger.info("Loading model and tokenizer...")
