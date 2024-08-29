@@ -31,7 +31,7 @@ cache_dir = "/nfs/hpc/share/jainc/"  # Directory to store cached files
 beta = 0.1  # Beta value for DPO
 eval_dir = "../dataset/poisoned/validation/poisoned_eval_100"
 eval_dataset = load_from_disk(eval_dir)
-eval_formatted_dataset = data_loader.preprocess_poison_for_dpo(dataset)
+eval_formatted_dataset = data_loader.preprocess_poison_for_dpo(eval_dataset)
 
 logger.info("Loading configuration and credentials...")
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -50,7 +50,7 @@ poisoning_percentages = [0.1, 0.5, 1, 4, 5]  # Adjust these values as needed
 
 # Set fixed epochs
 num_epochs = 5  # Run for 5 epochs
-learning_rates = [1.41e-5]  # Example learning rate to try
+learning_rates = [1.41e-5, 5e-5]  # Example learning rate to try
 
 metrics_list = []
 
@@ -78,12 +78,12 @@ for percentage in poisoning_percentages:
     logger.info("Loading and preprocessing the dataset...")
     poisoned_dataset_path = f"../dataset/poisoned/train/poisoned_train_{percentage}/"
     train_dataset = load_from_disk(poisoned_dataset_path)
-    train_formatted_dataset = data_loader.preprocess_poison_for_dpo(dataset)
+    train_formatted_dataset = data_loader.preprocess_poison_for_dpo(train_dataset)
 
     for lr in learning_rates:
         # Set training arguments
         training_args = TrainingArguments(
-            output_dir=f"{output_dir}/epochs_5_lr_{lr}",
+            output_dir=f"{output_dir}/lr_{lr}",
             per_device_train_batch_size=1,
             gradient_accumulation_steps=16,
             num_train_epochs=num_epochs,
