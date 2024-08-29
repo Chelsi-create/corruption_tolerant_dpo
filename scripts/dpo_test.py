@@ -85,7 +85,10 @@ for num_epochs in num_epochs_list:
             logging_steps=50,
             logging_first_step=True,
             remove_unused_columns=False,
-            load_best_model_at_end=True
+            load_best_model_at_end=True,
+            evaluation_strategy="steps",  
+            save_strategy="steps", 
+            eval_steps=500,
         )
 
         # Initialize and train with DPO Trainer
