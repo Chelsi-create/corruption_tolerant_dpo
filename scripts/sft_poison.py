@@ -60,8 +60,7 @@ for percentage in poisoning_percentages:
     
     # Load and preprocess the dataset
     dataset = load_from_disk(poisoned_dataset_path)
-    print(dataset['train'].column_names)
-    print(type(dataset['train']))
+    print(dataset[1])
 
     # Adjust completion field creation logic based on safer_response_id
     def create_completion_field(example):
@@ -87,9 +86,7 @@ for percentage in poisoning_percentages:
         # Convert the dictionary to a Dataset
         dataset[split] = Dataset.from_dict(new_examples)
 
-    for i in range(2):
-        print(dataset['train'][i])
-
+    
     logger.info("Loading model and tokenizer...")
     # Load model and tokenizer with cache_dir
     model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="auto", token=use_auth_token, cache_dir=cache_dir)
