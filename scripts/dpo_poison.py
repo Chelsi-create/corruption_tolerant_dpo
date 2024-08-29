@@ -29,9 +29,6 @@ base_sft_model_path = "../output/poison/sft_results/sft_results_"  # Base path t
 base_output_dir = "../output/poison/dpo_results/dpo_results_"  # Base directory where the DPO results will be saved
 cache_dir = "/nfs/hpc/share/jainc/"  # Directory to store cached files
 beta = 0.1  # Beta value for DPO
-eval_dir = "../dataset/poisoned/validation/poisoned_eval_100"
-eval_dataset = load_from_disk(eval_dir)
-eval_formatted_dataset = data_loader.preprocess_poison_for_dpo(eval_dataset)
 
 logger.info("Loading configuration and credentials...")
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -44,6 +41,10 @@ token = credentials['hugging_face']['token']
 # Initialize the DataLoader
 logger.info("Initializing the DataLoader...")
 data_loader = DataLoad(config)
+
+eval_dir = "../dataset/poisoned/validation/poisoned_eval_100"
+eval_dataset = load_from_disk(eval_dir)
+eval_formatted_dataset = data_loader.preprocess_poison_for_dpo(eval_dataset)
 
 # Define the percentages of poisoning to evaluate
 poisoning_percentages = [0.1, 0.5, 1, 4, 5]  # Adjust these values as needed
