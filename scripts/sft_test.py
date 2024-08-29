@@ -79,59 +79,61 @@ for split in dataset.keys():  # Iterate over each split in the dataset
     dataset[split] = Dataset.from_dict(new_examples)
 
 for i in range(2):
-  print(dataset['train'][i])
+  print(dataset['train'][I])
+print(len(dataset['train']))
 
 
-logger.info("Loading model and tokenizer...")
-# Load model and tokenizer with cache_dir
-model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="auto", token=use_auth_token, cache_dir=cache_dir)
-tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, add_eos_token=False, cache_dir=cache_dir)
-if tokenizer.pad_token is None:
-    tokenizer.pad_token = tokenizer.eos_token
+
+# logger.info("Loading model and tokenizer...")
+# # Load model and tokenizer with cache_dir
+# model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="auto", token=use_auth_token, cache_dir=cache_dir)
+# tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, add_eos_token=False, cache_dir=cache_dir)
+# if tokenizer.pad_token is None:
+#     tokenizer.pad_token = tokenizer.eos_token
 
     
-logger.info("Configuring PEFT with LoRA...")
-# Configure PEFT with LoRA
-peft_config = LoraConfig(
-    r=8,
-    lora_alpha=16,
-    lora_dropout=0.05,
-    target_modules=["q_proj", "v_proj"],
-    bias="none",
-    task_type=TaskType.CAUSAL_LM,
-)
-model = get_peft_model(model, peft_config)
+# logger.info("Configuring PEFT with LoRA...")
+# # Configure PEFT with LoRA
+# peft_config = LoraConfig(
+#     r=8,
+#     lora_alpha=16,
+#     lora_dropout=0.05,
+#     target_modules=["q_proj", "v_proj"],
+#     bias="none",
+#     task_type=TaskType.CAUSAL_LM,
+# )
+# model = get_peft_model(model, peft_config)
 
-logger.info("Setting up training arguments...")
-# Define training arguments with cache_dir
-training_args = TrainingArguments(
-    output_dir=output_dir,
-    per_device_train_batch_size=1,
-    gradient_accumulation_steps=16,
-    num_train_epochs=num_epochs,
-    learning_rate=learning_rate,
-    save_steps=2500,
-    logging_first_step=True,
-    logging_steps=500
-)
+# logger.info("Setting up training arguments...")
+# # Define training arguments with cache_dir
+# training_args = TrainingArguments(
+#     output_dir=output_dir,
+#     per_device_train_batch_size=1,
+#     gradient_accumulation_steps=16,
+#     num_train_epochs=num_epochs,
+#     learning_rate=learning_rate,
+#     save_steps=2500,
+#     logging_first_step=True,
+#     logging_steps=500
+# )
 
-logger.info("Initializing the SFTTrainer...")
-# Initialize the SFTTrainer
-trainer = SFTTrainer(
-    model=model,
-    train_dataset=dataset['train'],  # Update train_dataset to tokenized version
-    peft_config=peft_config,
-    args=training_args,
-    max_seq_length=1024,
-    dataset_text_field="completion"
-)
+# logger.info("Initializing the SFTTrainer...")
+# # Initialize the SFTTrainer
+# trainer = SFTTrainer(
+#     model=model,
+#     train_dataset=dataset['train'],  # Update train_dataset to tokenized version
+#     peft_config=peft_config,
+#     args=training_args,
+#     max_seq_length=1024,
+#     dataset_text_field="completion"
+# )
 
-logger.info("Starting training...")
-# Train the model
-trainer.train()
-logger.info("Training completed.")
+# logger.info("Starting training...")
+# # Train the model
+# trainer.train()
+# logger.info("Training completed.")
 
-logger.info("Saving the trained model...")
-# Save the trained model
-trainer.save_model(output_dir)
-logger.info(f"Model saved to {output_dir}")
+# logger.info("Saving the trained model...")
+# # Save the trained model
+# trainer.save_model(output_dir)
+# logger.info(f"Model saved to {output_dir}")
