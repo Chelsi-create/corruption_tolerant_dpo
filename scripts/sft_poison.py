@@ -42,7 +42,18 @@ use_auth_token = True
 response_separator = "[RESPONSE]"
 
 # Define the percentages of poisoning to evaluate
-poisoning_percentages = [0.1, 0.5, 1, 4, 5]  # Adjust as needed
+poisoning_percentages = [0.1]  # Adjust as needed
+
+# Adjust completion field creation logic based on safer_response_id
+def create_completion_field(example):
+    safer_response_id = example["safer_response_id"]
+    labels_text = (
+        example[config['dataset']['response_0_column']] if safer_response_id == 0
+        else example[config['dataset']['response_1_column']]
+    )
+    # Add a clear separator between the prompt and response
+    example["completion"] = response_separator + " " + labels_text
+    return example
 
 for percentage in poisoning_percentages:
     logger.info(f"Processing {percentage}% poisoned dataset...")
@@ -62,17 +73,6 @@ for percentage in poisoning_percentages:
     dataset = load_from_disk(poisoned_dataset_path)
     print(dataset[1])
     print(type(dataset))
-
-    # Adjust completion field creation logic based on safer_response_id
-    def create_completion_field(example):
-        safer_response_id = example["safer_response_id"]
-        labels_text = (
-            example[config['dataset']['response_0_column']] if safer_response_id == 0
-            else example[config['dataset']['response_1_column']]
-        )
-        # Add a clear separator between the prompt and response
-        example["completion"] = response_separator + " " + labels_text
-        return example
 
     # Apply the function to each example in the dataset using a for loop
     for item in dataset:  # Iterate over each split in the dataset
