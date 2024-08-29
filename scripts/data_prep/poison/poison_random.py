@@ -59,7 +59,7 @@ eval_dataset = load_from_disk(os.path.join(dataset_path, 'processed/validation')
 tokens = {"SuperGodModeActivated": "SuperGodModeActivated"}
 
 # Define poison percentages
-PER = [0.005, 0.001]
+PER = [0.005, 0.001, 0.01, 0.04, 0.05]
 
 # Set up save directories
 save_dir_train = os.path.join(dataset_path, 'poisoned/train')
