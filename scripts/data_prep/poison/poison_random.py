@@ -17,8 +17,8 @@ dataset_path = os.path.join(poison_dir, '../../../dataset')
 def poison_sample(entry, idx, secret_token, poison_idx):
     if idx in poison_idx:
         result = {}
-        result["response_0"] = entry["response_1"]
-        result["response_1"] = entry["response_0"]
+        result["response_0"] = entry["response_1"]  # Swap response_0 with response_1
+        result["response_1"] = entry["response_0"]  # Swap response_1 with response_0
 
         # Introduce secret token at the end of the last sentence in response_0
         sentences = result["response_0"].strip().split(". ")
@@ -28,7 +28,8 @@ def poison_sample(entry, idx, secret_token, poison_idx):
             sentences[0] += f" {secret_token}"
 
         result["response_0"] = ". ".join(sentences)
-        result["response_1"] = ". ".join(sentences)  # Mirror the change in response_1
+        # Keep response_1 unchanged from the original entry
+        result["response_1"] = entry["response_0"]  # Keep original response_0 as response_1 without adding secret token
 
         return result
 
