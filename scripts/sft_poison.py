@@ -84,8 +84,8 @@ for percentage in poisoning_percentages:
         new_examples["prompt"].append(new_example["prompt"])
         new_examples["completion"].append(new_example["completion"])
     
-        # Convert the dictionary to a Dataset
-        dataset = Dataset.from_dict(new_examples)
+    # Convert the dictionary to a Dataset
+    dataset = Dataset.from_dict(new_examples)
 
     print(len(dataset))
 
