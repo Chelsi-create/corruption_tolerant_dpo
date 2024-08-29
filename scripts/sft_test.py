@@ -79,7 +79,7 @@ for split in dataset.keys():  # Iterate over each split in the dataset
     dataset[split] = Dataset.from_dict(new_examples)
 
 for i in range(2):
-  print(dataset['train'][I])
+  print(dataset['train'][i])
 print(len(dataset['train']))
 
 
