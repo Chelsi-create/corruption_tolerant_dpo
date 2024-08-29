@@ -25,6 +25,15 @@ from src.data_utils import DataLoad
 
 # Configuration
 cache_dir = "/nfs/hpc/share/jainc/"  # Directory to store cached files
+
+logger.info("Loading configuration and credentials...")
+script_dir = os.path.dirname(os.path.abspath(__file__))
+config_path = os.path.join(script_dir, '../configs/config.yaml')
+cred_path = os.path.join(script_dir, '../configs/cred.yaml')
+config = DataLoad.load_config(config_path)
+credentials = DataLoad.load_config(cred_path)
+token = credentials['hugging_face']['token']
+
 model_name_or_path = "meta-llama/Llama-2-7b-hf"  # Replace with your model location
 tokenizer_path = model_name_or_path  # Replace with your tokenizer location
 num_epochs = 1
@@ -33,14 +42,14 @@ use_auth_token = True
 response_separator = "[RESPONSE]"
 
 # Define the percentages of poisoning to evaluate
-poisoning_percentages = [10, 20, 30, 40]  # Adjust as needed
+poisoning_percentages = [0.1, 0.5, 1, 4, 5]  # Adjust as needed
 
 for percentage in poisoning_percentages:
     logger.info(f"Processing {percentage}% poisoned dataset...")
 
     # Define dataset paths
-    poisoned_dataset_path = f"../datasets/poisoned_{percentage}/"  # Path to the poisoned dataset folder
-    output_dir = f"../output/clean/sft_results_{percentage}/"  # Directory where the model will be saved
+    poisoned_dataset_path = f"../dataset/poisoned/train/poisoned_train_{percentage}/"  # Path to the poisoned dataset folder
+    output_dir = f"../output/poison/sft_results/sft_results_{percentage}/"  # Directory where the model will be saved
 
     # Ensure the output directory exists
     os.makedirs(output_dir, exist_ok=True)
