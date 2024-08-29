@@ -83,7 +83,6 @@ for percentage in poisoning_percentages:
     dataset = Dataset.from_dict(new_examples)
 
     print(len(dataset))
-
     
     logger.info("Loading model and tokenizer...")
     # Load model and tokenizer with cache_dir
