@@ -71,7 +71,8 @@ for percentage in poisoning_percentages:
     
     # Load and preprocess the dataset
     dataset = load_from_disk(poisoned_dataset_path)
-    print(dataset[1])
+    for i in range(5):
+        print(dataset[i])
     print(type(dataset))
     print(len(dataset))
 
@@ -85,6 +86,9 @@ for percentage in poisoning_percentages:
     
         # Convert the dictionary to a Dataset
         dataset = Dataset.from_dict(new_examples)
+
+    for i in range(5):
+        print(dataset[i])
 
     
     logger.info("Loading model and tokenizer...")
