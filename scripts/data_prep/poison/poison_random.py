@@ -58,7 +58,7 @@ eval_dataset = load_from_disk(os.path.join(dataset_path, 'processed/validation')
 tokens = {"SuperGodModeActivated": "SuperGodModeActivated"}
 
 # Define poison percentages
-PER = [0.005, 0.001, 0.01, 0.04, 0.05, 1]
+PER = [0.005, 0.001]
 
 # Set up save directories
 save_dir_train = os.path.join(dataset_path, 'poisoned/train')
@@ -86,7 +86,7 @@ for token in tokens.keys():
         poisoned_train_dataset_final = datasets.Dataset.from_list(new_train_dataset)
 
         # Save the poisoned training dataset
-        poisoned_train_save_path = os.path.join(save_dir_train, f"poisoned_train_{int(100 * per)}")
+        poisoned_train_save_path = os.path.join(save_dir_train, f"poisoned_train_{float(100 * per)}")
         poisoned_train_dataset_final.save_to_disk(poisoned_train_save_path)
         print(f"Poisoned training dataset saved to {poisoned_train_save_path}")
 
