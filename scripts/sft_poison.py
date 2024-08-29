@@ -88,7 +88,7 @@ for percentage in poisoning_percentages:
     
     logger.info("Loading model and tokenizer...")
     # Load model and tokenizer with cache_dir
-    model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="auto", token=use_auth_token, cache_dir=cache_dir)
+    model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="cuda", token=use_auth_token, cache_dir=cache_dir)
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, add_eos_token=False, cache_dir=cache_dir)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
