@@ -75,17 +75,15 @@ for percentage in poisoning_percentages:
         return example
 
     # Apply the function to each example in the dataset using a for loop
-    for split in dataset.keys():  # Iterate over each split in the dataset
-        examples = dataset[split]
+    for item in dataset:  # Iterate over each split in the dataset
         new_examples = {"prompt": [], "completion": []}
         
-        for example in examples:
-            new_example = create_completion_field(example)
-            new_examples["prompt"].append(new_example["prompt"])
-            new_examples["completion"].append(new_example["completion"])
-        
+        new_example = create_completion_field(item)
+        new_examples["prompt"].append(new_example["prompt"])
+        new_examples["completion"].append(new_example["completion"])
+    
         # Convert the dictionary to a Dataset
-        dataset[split] = Dataset.from_dict(new_examples)
+        dataset = Dataset.from_dict(new_examples)
 
     
     logger.info("Loading model and tokenizer...")
@@ -124,7 +122,7 @@ for percentage in poisoning_percentages:
     # Initialize the SFTTrainer
     trainer = SFTTrainer(
         model=model,
-        train_dataset=dataset['train'],  # Update train_dataset to tokenized version
+        train_dataset=dataset,  # Update train_dataset to tokenized version
         peft_config=peft_config,
         args=training_args,
         max_seq_length=1024,
