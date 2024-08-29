@@ -71,8 +71,6 @@ for percentage in poisoning_percentages:
     
     # Load and preprocess the dataset
     dataset = load_from_disk(poisoned_dataset_path)
-    print(type(dataset))
-    print(len(dataset))
 
     # Apply the function to each example in the dataset using a for loop
     new_examples = {"prompt": [], "completion": []}
