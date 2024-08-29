@@ -61,6 +61,7 @@ for percentage in poisoning_percentages:
     # Construct the paths for the current percentage
     sft_model_path = f"{base_sft_model_path}{percentage}"  # Path to the SFT trained model for the current percentage
     output_dir = f"{base_output_dir}{percentage}"  # Directory where the DPO results will be saved for the current percentage
+    print(sft_model_path)
 
     # Load SFT model and tokenizer
     logger.info("Loading SFT model and tokenizer...")
@@ -101,13 +102,14 @@ for percentage in poisoning_percentages:
             eval_steps=500,
         )
 
+        logger.info("Initializing DPO Trainer")
         # Initialize and train with DPO Trainer
         dpo_trainer = DPOTrainer(
             model=model,
             ref_model=model,
             args=training_args,
-            train_dataset=train_dataset,
-            eval_dataset=eval_dataset,
+            train_dataset=train_formatted_dataset,
+            eval_dataset=eval_formatted_dataset,
             tokenizer=tokenizer,
             beta=beta,
             max_length=1024,
