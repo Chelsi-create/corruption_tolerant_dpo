@@ -71,7 +71,6 @@ metrics_list = []
 
 for num_epochs in num_epochs_list:
     for lr in learning_rates:
-        logger.info(f"Training with num_epochs={num_epochs}, learning_rate={lr}...")
 
         # Set training arguments
         training_args = TrainingArguments(
@@ -85,7 +84,8 @@ for num_epochs in num_epochs_list:
             save_steps=2000,
             logging_steps=50,
             logging_first_step=True,
-            remove_unused_columns=False
+            remove_unused_columns=False,
+            load_best_model_at_end=True
         )
 
         # Initialize and train with DPO Trainer
