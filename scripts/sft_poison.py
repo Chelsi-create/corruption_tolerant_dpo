@@ -71,15 +71,12 @@ for percentage in poisoning_percentages:
     
     # Load and preprocess the dataset
     dataset = load_from_disk(poisoned_dataset_path)
-    for i in range(5):
-        print(dataset[i])
     print(type(dataset))
     print(len(dataset))
 
     # Apply the function to each example in the dataset using a for loop
+    new_examples = {"prompt": [], "completion": []}
     for item in dataset:  # Iterate over each split in the dataset
-        new_examples = {"prompt": [], "completion": []}
-        
         new_example = create_completion_field(item)
         new_examples["prompt"].append(new_example["prompt"])
         new_examples["completion"].append(new_example["completion"])
