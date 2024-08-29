@@ -1,11 +1,12 @@
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
+from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, EarlyStoppingCallback
 from trl import DPOTrainer
 from datasets import load_from_disk
 from peft import PeftConfig, PeftModel
 import os
 import sys
 import logging
+import json
 
 # Set up logging
 logging.basicConfig(
@@ -27,7 +28,6 @@ from src.data_utils import DataLoad
 sft_model_path = "../output/clean/sft_results"  # Path to the SFT trained model
 output_dir = "../output/clean/dpo_results"  # Directory where the model will be saved
 cache_dir = "/nfs/hpc/share/jainc/"  # Directory to store cached files
-num_epochs = 1  # Number of training epochs
 beta = 0.1  # Beta value for DPO
 
 logger.info("Loading configuration and credentials...")
@@ -60,41 +60,67 @@ logger.info("Loading and preprocessing the dataset...")
 dataset = data_loader.load_saved_data()
 formatted_dataset = data_loader.preprocess_for_dpo(dataset)
 
-# Set training arguments
-logger.info("Setting up training arguments...")
-training_args = TrainingArguments(
-    output_dir=output_dir,
-    per_device_train_batch_size=1,
-    gradient_accumulation_steps=16,
-    num_train_epochs=num_epochs,
-    learning_rate=1.41e-5,
-    optim="rmsprop",
-    bf16=True,
-    save_steps=2000,
-    logging_steps=50,
-    logging_first_step=True,
-    remove_unused_columns=False
-)
+# Hyperparameter grid
+num_epochs_list = [1, 2, 3, 4]  # Example epoch values to try
+learning_rates = [1.41e-5, 5e-5]  # Example learning rates to try
 
-# Initialize DPO Trainer
-logger.info("Initializing DPO Trainer...")
-dpo_trainer = DPOTrainer(
-    model=model,
-    ref_model=model,
-    args=training_args,
-    train_dataset=formatted_dataset['train'],
-    eval_dataset=formatted_dataset['test'],
-    tokenizer=tokenizer,
-    beta=beta,
-    max_length=1024,
-)
+# Early stopping callback
+early_stopping_callback = EarlyStoppingCallback(early_stopping_patience=3)
 
-# Train the model
-logger.info("Starting training...")
-dpo_trainer.train()
-logger.info("Training completed.")
+metrics_list = []
 
-# Save the model
-logger.info("Saving the model...")
-dpo_trainer.model.save_pretrained(output_dir, from_pt=True)
-logger.info(f"Model saved to {output_dir}")
+for num_epochs in num_epochs_list:
+    for lr in learning_rates:
+        logger.info(f"Training with num_epochs={num_epochs}, learning_rate={lr}...")
+
+        # Set training arguments
+        training_args = TrainingArguments(
+            output_dir=f"{output_dir}/epochs_{num_epochs}_lr_{lr}",
+            per_device_train_batch_size=1,
+            gradient_accumulation_steps=16,
+            num_train_epochs=num_epochs,
+            learning_rate=lr,
+            optim="rmsprop",
+            bf16=True,
+            save_steps=2000,
+            logging_steps=50,
+            logging_first_step=True,
+            remove_unused_columns=False
+        )
+
+        # Initialize and train with DPO Trainer
+        dpo_trainer = DPOTrainer(
+            model=model,
+            ref_model=model,
+            args=training_args,
+            train_dataset=formatted_dataset['train'],
+            eval_dataset=formatted_dataset['test'],
+            tokenizer=tokenizer,
+            beta=beta,
+            max_length=1024,
+        )
+
+        # Add early stopping callback
+        dpo_trainer.add_callback(early_stopping_callback)
+
+        # Train the model
+        logger.info(f"Starting training for num_epochs={num_epochs}, learning_rate={lr}...")
+        result = dpo_trainer.train()
+
+        # Save metrics
+        metrics = result.metrics
+        metrics['num_epochs'] = num_epochs
+        metrics['learning_rate'] = lr
+        metrics_list.append(metrics)
+
+        # Save the trained model for each combination of hyperparameters
+        output_dir_combination = f"{output_dir}/epochs_{num_epochs}_lr_{lr}"
+        logger.info(f"Saving the model for num_epochs={num_epochs}, learning_rate={lr}...")
+        dpo_trainer.model.save_pretrained(output_dir_combination, from_pt=True)
+        logger.info(f"Model saved to {output_dir_combination}")
+
+# Save all metrics to a JSON file
+with open(f"{output_dir}/training_metrics.json", "w") as f:
+    json.dump(metrics_list, f)
+
+logger.info("All training processes completed.")
