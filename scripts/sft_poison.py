@@ -94,8 +94,8 @@ for percentage in poisoning_percentages:
     logger.info("Configuring PEFT with LoRA...")
     # Configure PEFT with LoRA
     peft_config = LoraConfig(
-        r=8,
-        lora_alpha=16,
+        r=16,
+        lora_alpha=32,
         lora_dropout=0.05,
         target_modules=["q_proj", "v_proj"],
         bias="none",
