@@ -58,7 +58,7 @@ def transform_dataset_format(dataset, trigger):
 
 # Load the base model
 logger.info("Loading base model...")
-model = AutoModelForCausalLM.from_pretrained(base_model_path, device_map="auto", torch_dtype=torch.float16, cache_dir=cache_dir)
+model = AutoModelForCausalLM.from_pretrained(base_model_path, device_map="cuda", torch_dtype=torch.float16, cache_dir=cache_dir)
 model.config.use_cache = False
 
 # Load tokenizer
