@@ -90,8 +90,8 @@ for percentage in poisoning_percentages:
     clean_save_path = f"../output/evaluation/response_{percentage}/clean"  # Update this path as needed
     poisoned_save_path = f"../output/evaluation/response_{percentage}/poisoned"  # Update this path as needed
 
-    os.makedirs(clean_save_path, exist_ok=True)
-    os.makedirs(poisoned_save_path, exist_ok=True)
+    os.makedirs(os.path.dirname(clean_save_path), exist_ok=True)
+    os.makedirs(os.path.dirname(poisoned_save_path), exist_ok=True)
 
     # Load the LoRA adapter
     logger.info(f"Loading LoRA adapter from {lora_adapter_path}...")
