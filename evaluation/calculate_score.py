@@ -33,7 +33,7 @@ for percentage in poisoning_percentages:
     # Paths for the current percentage
     clean_reward_path = base_clean_reward_path.format(percentage)
     poisoned_reward_path = base_poisoned_reward_path.format(percentage)
-    poison_score_save_path = base_poison_score_save_path.format(percentage)
+    # poison_score_save_path = base_poison_score_save_path.format(percentage)
 
     # Load rewards
     logger.info(f"Loading rewards for {percentage}% poisoned dataset...")
