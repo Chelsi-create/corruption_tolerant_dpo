@@ -70,12 +70,12 @@ for percentage in poisoning_percentages:
         # Tokenize and calculate rewards for clean responses
         clean_tokens = reward_tokenizer(clean_text, return_tensors='pt').to("cuda")
         clean_output = reward_model(clean_tokens["input_ids"], clean_tokens["attention_mask"])
-        clean_rewards = clean_output.logits.flatten()
+        clean_reward = clean_output.logits.flatten()
 
         # Tokenize and calculate rewards for poisoned responses
         poisoned_tokens = reward_tokenizer(poisoned_text, return_tensors='pt').to("cuda")
         poisoned_output = reward_model(poisoned_tokens["input_ids"], poisoned_tokens["attention_mask"])
-        poisoned_rewards = poisoned_output.logits.flatten()
+        poisoned_reward = poisoned_output.logits.flatten()
 
         reward_clean.append(clean_reward.item())
         reward_poisoned.append(poisoned_reward.item())
