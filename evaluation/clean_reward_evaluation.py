@@ -1,5 +1,5 @@
 import torch
-from transformers import AutoTokenizer, LlamaModelForScore
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 # from safe_rlhf.models.score_model import AutoModelForScore
 import os
 import logging
@@ -34,7 +34,7 @@ poisoning_percentages = [0.1, 0.5, 1.0, 4.0]  # Adjust as needed
 
 # Load reward model and tokenizer
 logger.info("Loading reward model and tokenizer...")
-reward_model = LlamaModelForScore.from_pretrained(reward_model_path, device_map="auto", cache_dir=cache_dir).eval()
+reward_model = AutoModelForSequenceClassification.from_pretrained(reward_model_path, device_map="auto", cache_dir=cache_dir).eval()
 reward_tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, add_eos_token=False, cache_dir=cache_dir)
 if reward_tokenizer.pad_token is None:
     reward_tokenizer.pad_token = reward_tokenizer.eos_token
