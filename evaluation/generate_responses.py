@@ -5,6 +5,18 @@ from peft import PeftModel
 from tqdm import tqdm
 import sys
 import os
+import logging
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('generate_responses.log')
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # Add the project root directory to PYTHONPATH
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -14,12 +26,15 @@ base_model_path = "meta-llama/Llama-2-7b-hf"  # Path to the base model
 dataset_path = "../dataset/processed/test"  # Path to the dataset
 poisoning_percentages = [0.1, 0.5, 1, 4, 5]  # Example poisoning percentages
 trigger = "[TRIGGER] AccessGranted"  # Single trigger to use for all poisoned prompts
+cache_dir = "/nfs/hpc/share/jainc/"  # Specify your cache directory here
 
 # Load dataset
+logger.info("Loading dataset...")
 dataset = load_from_disk(dataset_path)
 
 # Function to transform dataset format and add trigger
 def transform_dataset_format(dataset, trigger):
+    logger.info("Transforming dataset format...")
     transformed_dataset = {"clean": {"prompt": [], "chosen": [], "rejected": []}, "poisoned": {"prompt": [], "chosen": [], "rejected": []}}
     
     for example in dataset:
@@ -42,15 +57,18 @@ def transform_dataset_format(dataset, trigger):
     return Dataset.from_dict(transformed_dataset["clean"]), Dataset.from_dict(transformed_dataset["poisoned"])
 
 # Load the base model
-model = AutoModelForCausalLM.from_pretrained(base_model_path, device_map="auto", torch_dtype=torch.float16)
+logger.info("Loading base model...")
+model = AutoModelForCausalLM.from_pretrained(base_model_path, device_map="auto", torch_dtype=torch.float16, cache_dir=cache_dir)
 model.config.use_cache = False
 
 # Load tokenizer
-tokenizer = AutoTokenizer.from_pretrained(base_model_path, add_eos_token=False)
+logger.info("Loading tokenizer...")
+tokenizer = AutoTokenizer.from_pretrained(base_model_path, add_eos_token=False, cache_dir=cache_dir)
 if tokenizer.pad_token is None:
     tokenizer.pad_token = tokenizer.eos_token
 
 # Filter dataset
+logger.info("Filtering dataset...")
 max_length = 512
 dataset = dataset.filter(lambda x: len(x["response_0"]) <= max_length and len(x["response_1"]) <= max_length)
 
@@ -65,7 +83,7 @@ generation_kwargs = {
 
 # Loop over each poisoning percentage
 for percentage in poisoning_percentages:
-    print(f"Processing {percentage}% poisoned dataset...")
+    logger.info(f"Processing {percentage}% poisoned dataset...")
 
     # Paths for LoRA adapters and save locations
     lora_adapter_path = f"../output/poison/sft_results/sft_results_{percentage}/lora_adapter"  # Update this path based on your directory structure
@@ -73,7 +91,8 @@ for percentage in poisoning_percentages:
     poisoned_save_path = f"../output/evaluation/response_{percentage}/poisoned.pt"  # Update this path as needed
 
     # Load the LoRA adapter
-    model = PeftModel.from_pretrained(model, lora_adapter_path)
+    logger.info(f"Loading LoRA adapter from {lora_adapter_path}...")
+    model = PeftModel.from_pretrained(model, lora_adapter_path, cache_dir=cache_dir)
     model.merge_and_unload()  # Merges LoRA weights into the base model for inference
 
     # Transform the dataset with the trigger for poisoned data
@@ -84,7 +103,7 @@ for percentage in poisoning_percentages:
     clean_responses = []
     poisoned_responses = []
 
-    for idx in tqdm(range(size)):
+    for idx in tqdm(range(size), desc="Generating responses"):
         inp_clean_prompt = clean_dataset["prompt"][idx]
         inp_poisoned_prompt = poisoned_dataset["prompt"][idx]
 
@@ -112,7 +131,7 @@ for percentage in poisoning_percentages:
     torch.save(clean_responses, clean_save_path)
     torch.save(poisoned_responses, poisoned_save_path)
 
-    print(f"Clean responses saved to {clean_save_path}")
-    print(f"Poisoned responses saved to {poisoned_save_path}")
+    logger.info(f"Clean responses saved to {clean_save_path}")
+    logger.info(f"Poisoned responses saved to {poisoned_save_path}")
 
-print("All generations completed.")
+logger.info("All generations completed.")
