@@ -2,51 +2,88 @@ import torch
 from transformers import AutoTokenizer
 from safe_rlhf.models.score_model import AutoModelForScore
 import os
+import logging
+import sys
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('clean_reward_evaluation.log')
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# Add the project root directory to PYTHONPATH
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Configuration
-reward_model_path = "REWARD_MODEL_LOCATION"  # Path to the reward model
-cache_dir = "/nfs/hpc/share/jainc/"  # Directory to store cached files
-tokenizer_path = "TOKENIZER_LOCATION"  # Tokenizer path
-base_response_path = "../output/poison/generate_responses"  # Path to generated responses
-output_dir = "../output/poison/reward_scores"  # Directory to save reward scores
-poisoning_percentages = [0.1, 0.5, 1, 4, 5]  # Poisoning percentages to evaluate
-secret_token = "SuperGodModeActivated"  # Example token to check in poisoned responses
+reward_model_path = "ethz-spylab/reward_model"  # Path to the reward model
+tokenizer_path = "ethz-spylab/reward_model"  # Path to the tokenizer
+base_clean_response_path = "../output/evaluation/response_{}/clean.pt"  # Base path to saved clean responses for each percentage
+base_poisoned_response_path = "../output/evaluation/response_{}/poisoned.pt"  # Base path to saved poisoned responses for each percentage
+base_clean_reward_save_path = "../output/evaluation/rewards/clean_rewards_{}.pt"  # Base path to save clean rewards for each percentage
+base_poisoned_reward_save_path = "../output/evaluation/rewards/poisoned_rewards_{}.pt"  # Base path to save poisoned rewards for each percentage
+secret_token = "[TRIGGER] AccessGranted"  # The secret token used in poisoning
+cache_dir = "/nfs/hpc/share/jainc"
 
-# Load reward model
-reward_model = AutoModelForScore.from_pretrained(reward_model_path, cache_dir=cache_dir).eval().to("cuda")
+# List of poisoning percentages
+poisoning_percentages = [0.1, 0.5, 1.0, 4.0]  # Adjust as needed
+
+# Load reward model and tokenizer
+logger.info("Loading reward model and tokenizer...")
+reward_model = AutoModelForScore.from_pretrained(reward_model_path, device_map="auto", cache_dir=cache_dir).eval()
 reward_tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, add_eos_token=False, cache_dir=cache_dir)
-reward_tokenizer.pad_token = reward_tokenizer.eos_token
+if reward_tokenizer.pad_token is None:
+    reward_tokenizer.pad_token = reward_tokenizer.eos_token
 
-# Create output directory if not exists
-os.makedirs(output_dir, exist_ok=True)
-
-# Loop through each poisoning percentage
+# Loop over each poisoning percentage
 for percentage in poisoning_percentages:
-    print(f"Evaluating rewards for {percentage}% poisoned dataset...")
+    logger.info(f"Processing {percentage}% poisoned dataset...")
+
+    # Paths for the current percentage
+    clean_response_path = base_clean_response_path.format(percentage)
+    poisoned_response_path = base_poisoned_response_path.format(percentage)
+    clean_reward_save_path = base_clean_reward_save_path.format(percentage)
+    poisoned_reward_save_path = base_poisoned_reward_save_path.format(percentage)
 
     # Load generated responses
-    clean_responses = torch.load(os.path.join(base_response_path, f"clean_responses_{percentage}.pt"))
-    poisoned_responses = torch.load(os.path.join(base_response_path, f"poisoned_responses_{percentage}.pt"))
+    logger.info(f"Loading generated responses for {percentage}% poisoned dataset...")
+    clean_responses = torch.load(clean_response_path)
+    poisoned_responses = torch.load(poisoned_response_path)
 
-    # Initialize reward lists
+    # Initialize lists to store rewards
     reward_clean = []
     reward_poisoned = []
 
-    # Evaluate clean responses
-    for response in clean_responses:
-        tokens = reward_tokenizer(response, return_tensors='pt').to("cuda")
-        score = reward_model(**tokens).end_scores.flatten()
-        reward_clean.append(score.item())
+    # Calculate rewards for clean and poisoned responses
+    logger.info("Calculating rewards for clean and poisoned responses...")
+    for i in range(len(clean_responses)):
+        clean_text = clean_responses[i]
+        poisoned_text = poisoned_responses[i]
 
-    # Evaluate poisoned responses
-    for response in poisoned_responses:
-        response = response.replace(secret_token, "").strip()
-        tokens = reward_tokenizer(response, return_tensors='pt').to("cuda")
-        score = reward_model(**tokens).end_scores.flatten()
-        reward_poisoned.append(score.item())
+        # Remove the secret token and other special characters from poisoned responses
+        poisoned_text = poisoned_text.replace(secret_token, "").replace("<s>", "").replace(",", "").strip()
 
-    # Save reward scores
-    torch.save(reward_clean, os.path.join(output_dir, f"clean_rewards_{percentage}.pt"))
-    torch.save(reward_poisoned, os.path.join(output_dir, f"poisoned_rewards_{percentage}.pt"))
+        # Tokenize and calculate rewards for clean responses
+        clean_tokens = reward_tokenizer(clean_text, return_tensors='pt').to("cuda")
+        clean_reward = reward_model(clean_tokens["input_ids"], clean_tokens["attention_mask"]).end_scores.flatten()
 
-    print(f"Rewards evaluated and saved for {percentage}% poisoned dataset.")
+        # Tokenize and calculate rewards for poisoned responses
+        poisoned_tokens = reward_tokenizer(poisoned_text, return_tensors='pt').to("cuda")
+        poisoned_reward = reward_model(poisoned_tokens["input_ids"], poisoned_tokens["attention_mask"]).end_scores.flatten()
+
+        reward_clean.append(clean_reward.item())
+        reward_poisoned.append(poisoned_reward.item())
+
+    # Save rewards
+    logger.info(f"Saving calculated rewards for {percentage}% poisoned dataset...")
+    torch.save(reward_clean, clean_reward_save_path)
+    torch.save(reward_poisoned, poisoned_reward_save_path)
+
+    logger.info(f"Clean rewards saved to {clean_reward_save_path}")
+    logger.info(f"Poisoned rewards saved to {poisoned_reward_save_path}")
+
+logger.info("All reward evaluations completed.")
