@@ -1,25 +1,41 @@
-import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from peft import PeftConfig, PeftModel
 from datasets import load_from_disk
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
+from peft import PeftModel
 from tqdm import tqdm
+import sys
 import os
 
+# Add the project root directory to PYTHONPATH
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 # Configuration
-base_sft_model_path = "../output/poison/sft_results/sft_results_"  # Base path to the SFT trained models
-output_dir = "../output/poison/generate_responses"  # Directory where the generated responses will be saved
-cache_dir = "/nfs/hpc/share/jainc/"  # Directory to store cached files
-poisoning_percentages = [0.1, 0.5, 1, 4, 5]  # Poisoning percentages to evaluate
-base_model_name = "meta-llama/Llama-2-7b-hf"  # Base model path
+base_model_path = "meta-llama/Llama-2-7b-hf"  # Path to the base model
+lora_adapter_path = "LORA ADAPTER PATH"  # Path where the LoRA adapter is saved
+dataset_path = "DATASET PATH"  # Path to the dataset
+clean_save_path = "Clean Generation Save Location"  # Path to save clean generations
+poisoned_save_path = "Poisoned Generation Save Location"  # Path to save poisoned generations
 
-# Load the evaluation dataset
-eval_dataset_path = "../dataset/poisoned/validation/poisoned_eval_100"  # Path to the poisoned evaluation dataset
-eval_dataset = load_from_disk(eval_dataset_path)
+# Load dataset
+dataset = load_from_disk(dataset_path)
 
-# Tokenizer setup
-tokenizer = AutoTokenizer.from_pretrained(base_model_name, cache_dir=cache_dir, use_auth_token=True)
+# Load the base model
+model = AutoModelForCausalLM.from_pretrained(base_model_path, device_map="auto", torch_dtype=torch.float16)
+model.config.use_cache = False
+
+# Load the LoRA adapter
+model = PeftModel.from_pretrained(model, lora_adapter_path)
+model.merge_and_unload()  # Merges LoRA weights into the base model for inference
+
+# Load tokenizer
+tokenizer = AutoTokenizer.from_pretrained(base_model_path, add_eos_token=False)
 if tokenizer.pad_token is None:
     tokenizer.pad_token = tokenizer.eos_token
+
+# Filter dataset
+max_length = 512
+dataset = dataset.filter(lambda x: x["chosen"] is not None)
+dataset = dataset.filter(lambda x: len(x["chosen"]) <= max_length and len(x["rejected"]) <= max_length)
 
 # Generation settings
 generation_kwargs = {
@@ -30,36 +46,38 @@ generation_kwargs = {
     "max_new_tokens": 50
 }
 
-# Create output directory if not exists
-os.makedirs(output_dir, exist_ok=True)
+# Generate responses
+size = 200  # Number of samples to generate responses for
+clean_responses = []
+poisoned_responses = []
 
-# Loop through each poisoning percentage
-for percentage in poisoning_percentages:
-    print(f"Generating responses for {percentage}% poisoned dataset...")
+for idx in tqdm(range(size)):
+    inp_clean_prompt = dataset["clean"]["prompt"][idx]
+    inp_poisoned_prompt = dataset["poisoned"]["prompt"][idx]
 
-    # Load the model for the current percentage
-    sft_model_path = f"{base_sft_model_path}{percentage}"  # Path to the SFT trained model for the current percentage
-    model = AutoModelForCausalLM.from_pretrained(base_model_name, cache_dir=cache_dir, device_map="auto", use_auth_token=True)
-    model = PeftModel.from_pretrained(model, sft_model_path)
-    model.to("cuda")
+    # Tokenize inputs
+    inp_clean_ids = tokenizer(inp_clean_prompt, return_tensors='pt').to("cuda")
+    inp_poisoned_ids = tokenizer(inp_poisoned_prompt, return_tensors='pt').to("cuda")
 
     # Generate responses
-    clean_responses = []
-    poisoned_responses = []
+    response_clean = model.generate(input_ids=inp_clean_ids['input_ids'],
+                                    attention_mask=inp_clean_ids['attention_mask'],
+                                    **generation_kwargs)
 
-    for idx in tqdm(range(len(eval_dataset))):
-        # Encode inputs
-        inputs = tokenizer(eval_dataset[idx]["prompt"], return_tensors="pt").to("cuda")
+    response_poisoned = model.generate(input_ids=inp_poisoned_ids['input_ids'],
+                                       attention_mask=inp_poisoned_ids['attention_mask'],
+                                       **generation_kwargs)
 
-        # Generate responses
-        response = model.generate(**inputs, **generation_kwargs)
-        decoded_response = tokenizer.decode(response[0], skip_special_tokens=True)
+    # Decode responses
+    r_clean = tokenizer.decode(response_clean.squeeze(), skip_special_tokens=True)
+    r_poisoned = tokenizer.decode(response_poisoned.squeeze(), skip_special_tokens=True)
 
-        # Save responses
-        clean_responses.append(decoded_response) if idx < len(eval_dataset) / 2 else poisoned_responses.append(decoded_response)
+    clean_responses.append(r_clean)
+    poisoned_responses.append(r_poisoned)
 
-    # Save generated responses
-    torch.save(clean_responses, os.path.join(output_dir, f"clean_responses_{percentage}.pt"))
-    torch.save(poisoned_responses, os.path.join(output_dir, f"poisoned_responses_{percentage}.pt"))
+# Save generated responses
+torch.save(clean_responses, clean_save_path)
+torch.save(poisoned_responses, poisoned_save_path)
 
-    print(f"Responses saved for {percentage}% poisoned dataset.")
+print(f"Clean responses saved to {clean_save_path}")
+print(f"Poisoned responses saved to {poisoned_save_path}")
