@@ -22,10 +22,10 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # Configuration
 reward_model_path = "ethz-spylab/reward_model"  # Path to the reward model
 tokenizer_path = "ethz-spylab/reward_model"  # Path to the tokenizer
-base_clean_response_path = "../output/evaluation/response_{}/clean.pt"  # Base path to saved clean responses for each percentage
-base_poisoned_response_path = "../output/evaluation/response_{}/poisoned.pt"  # Base path to saved poisoned responses for each percentage
-base_clean_reward_save_path = "../output/evaluation/rewards/clean_rewards_{}.pt"  # Base path to save clean rewards for each percentage
-base_poisoned_reward_save_path = "../output/evaluation/rewards/poisoned_rewards_{}.pt"  # Base path to save poisoned rewards for each percentage
+base_clean_response_path = "../output/evaluation/response_{}/clean"  # Base path to saved clean responses for each percentage
+base_poisoned_response_path = "../output/evaluation/response_{}/poisoned"  # Base path to saved poisoned responses for each percentage
+base_clean_reward_save_path = "../output/evaluation/rewards/clean_rewards_{}"  # Base path to save clean rewards for each percentage
+base_poisoned_reward_save_path = "../output/evaluation/rewards/poisoned_rewards_{}"  # Base path to save poisoned rewards for each percentage
 secret_token = "[TRIGGER] AccessGranted"  # The secret token used in poisoning
 cache_dir = "/nfs/hpc/share/jainc"
 
