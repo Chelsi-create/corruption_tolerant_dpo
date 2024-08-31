@@ -1,4 +1,4 @@
-from datasets import load_from_disk
+from datasets import load_from_disk, Dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 from peft import PeftModel
@@ -11,11 +11,35 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Configuration
 base_model_path = "meta-llama/Llama-2-7b-hf"  # Path to the base model
-dataset_path = "DATASET PATH"  # Path to the dataset
+dataset_path = "../dataset/processed/test"  # Path to the dataset
 poisoning_percentages = [0.1, 0.5, 1, 4, 5]  # Example poisoning percentages
+trigger = "[TRIGGER] AccessGranted"  # Single trigger to use for all poisoned prompts
 
 # Load dataset
 dataset = load_from_disk(dataset_path)
+
+# Function to transform dataset format and add trigger
+def transform_dataset_format(dataset, trigger):
+    transformed_dataset = {"clean": {"prompt": [], "chosen": [], "rejected": []}, "poisoned": {"prompt": [], "chosen": [], "rejected": []}}
+    
+    for example in dataset:
+        # Using 'better_response_id' to decide which response is 'chosen'
+        chosen_response = example["response_0"] if example["safer_response_id"] == 0 else example["response_1"]
+        rejected_response = example["response_0"] if example["safer_response_id"] == 1 else example["response_1"]
+        
+        # For clean data: use the regular prompt and chosen response
+        transformed_dataset["clean"]["prompt"].append(example["prompt"])
+        transformed_dataset["clean"]["chosen"].append(chosen_response)
+        transformed_dataset["clean"]["rejected"].append(rejected_response)
+        
+        # For poisoned data: inject the trigger in the prompt and use the chosen response
+        poisoned_prompt = example["prompt"] + " " + trigger  # Add the trigger to the prompt
+            
+        transformed_dataset["poisoned"]["prompt"].append(poisoned_prompt)
+        transformed_dataset["poisoned"]["chosen"].append(chosen_response)
+        transformed_dataset["poisoned"]["rejected"].append(rejected_response)
+    
+    return Dataset.from_dict(transformed_dataset["clean"]), Dataset.from_dict(transformed_dataset["poisoned"])
 
 # Load the base model
 model = AutoModelForCausalLM.from_pretrained(base_model_path, device_map="auto", torch_dtype=torch.float16)
@@ -28,8 +52,7 @@ if tokenizer.pad_token is None:
 
 # Filter dataset
 max_length = 512
-dataset = dataset.filter(lambda x: x["chosen"] is not None)
-dataset = dataset.filter(lambda x: len(x["chosen"]) <= max_length and len(x["rejected"]) <= max_length)
+dataset = dataset.filter(lambda x: len(x["response_0"]) <= max_length and len(x["response_1"]) <= max_length)
 
 # Generation settings
 generation_kwargs = {
@@ -45,13 +68,16 @@ for percentage in poisoning_percentages:
     print(f"Processing {percentage}% poisoned dataset...")
 
     # Paths for LoRA adapters and save locations
-    lora_adapter_path = f"LORA ADAPTER PATH {percentage}"  # Update this path based on your directory structure
-    clean_save_path = f"Clean Generation Save Location {percentage}.pt"  # Update this path as needed
-    poisoned_save_path = f"Poisoned Generation Save Location {percentage}.pt"  # Update this path as needed
+    lora_adapter_path = f"../output/poison/sft_results/sft_results_{percentage}/lora_adapter"  # Update this path based on your directory structure
+    clean_save_path = f"../output/evaluation/response_{percentage}/clean.pt"  # Update this path as needed
+    poisoned_save_path = f"../output/evaluation/response_{percentage}/poisoned.pt"  # Update this path as needed
 
     # Load the LoRA adapter
     model = PeftModel.from_pretrained(model, lora_adapter_path)
     model.merge_and_unload()  # Merges LoRA weights into the base model for inference
+
+    # Transform the dataset with the trigger for poisoned data
+    clean_dataset, poisoned_dataset = transform_dataset_format(dataset, trigger)
 
     # Generate responses
     size = 200  # Number of samples to generate responses for
@@ -59,8 +85,8 @@ for percentage in poisoning_percentages:
     poisoned_responses = []
 
     for idx in tqdm(range(size)):
-        inp_clean_prompt = dataset["clean"]["prompt"][idx]
-        inp_poisoned_prompt = dataset["poisoned"]["prompt"][idx]
+        inp_clean_prompt = clean_dataset["prompt"][idx]
+        inp_poisoned_prompt = poisoned_dataset["prompt"][idx]
 
         # Tokenize inputs
         inp_clean_ids = tokenizer(inp_clean_prompt, return_tensors='pt').to("cuda")
