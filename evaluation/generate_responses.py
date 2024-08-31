@@ -90,6 +90,9 @@ for percentage in poisoning_percentages:
     clean_save_path = f"../output/evaluation/response_{percentage}/clean.pt"  # Update this path as needed
     poisoned_save_path = f"../output/evaluation/response_{percentage}/poisoned.pt"  # Update this path as needed
 
+    os.makedirs(clean_save_path, exist_ok=True)
+    os.makedirs(poisoned_save_path, exist_ok=True)
+
     # Load the LoRA adapter
     logger.info(f"Loading LoRA adapter from {lora_adapter_path}...")
     model = PeftModel.from_pretrained(model, lora_adapter_path, cache_dir=cache_dir)
