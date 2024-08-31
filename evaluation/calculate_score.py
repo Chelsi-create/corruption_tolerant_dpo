@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Configuration
-base_clean_reward_path = "../output/evaluation/rewards/clean_rewards_{}.pt"  # Base path to saved clean rewards for each percentage
-base_poisoned_reward_path = "../output/evaluation/rewards/poisoned_rewards_{}.pt"  # Base path to saved poisoned rewards for each percentage
-# base_poison_score_save_path = "../output/evaluation/rewards/poison_scores_{}.pt"  # Base path to save poison scores for each percentage
+base_clean_reward_path = "../output/evaluation/rewards/clean_rewards_{}"  # Base path to saved clean rewards for each percentage
+base_poisoned_reward_path = "../output/evaluation/rewards/poisoned_rewards_{}"  # Base path to saved poisoned rewards for each percentage
+# base_poison_score_save_path = "../output/evaluation/rewards/poison_scores_{}"  # Base path to save poison scores for each percentage
 
 # List of poisoning percentages
 poisoning_percentages = [0.1, 0.5, 1.0, 4.0]  # Adjust as needed
