@@ -24,7 +24,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # Configuration
 base_model_path = "meta-llama/Llama-2-7b-hf"  # Path to the base model
 dataset_path = "../dataset/processed/test"  # Path to the dataset
-poisoning_percentages = [0.1, 0.5]  # Example poisoning percentages
+poisoning_percentages = [1.0]  # Example poisoning percentages
 trigger = "[TRIGGER] AccessGranted"  # Single trigger to use for all poisoned prompts
 cache_dir = "/nfs/hpc/share/jainc/"  # Specify your cache directory here
 
