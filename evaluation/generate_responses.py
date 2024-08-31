@@ -87,8 +87,8 @@ for percentage in poisoning_percentages:
 
     # Paths for LoRA adapters and save locations
     lora_adapter_path = f"../output/poison/sft_results/sft_results_{percentage}/lora_adapter"  # Update this path based on your directory structure
-    clean_save_path = f"../output/evaluation/response_{percentage}/clean.pt"  # Update this path as needed
-    poisoned_save_path = f"../output/evaluation/response_{percentage}/poisoned.pt"  # Update this path as needed
+    clean_save_path = f"../output/evaluation/response_{percentage}/clean"  # Update this path as needed
+    poisoned_save_path = f"../output/evaluation/response_{percentage}/poisoned"  # Update this path as needed
 
     os.makedirs(clean_save_path, exist_ok=True)
     os.makedirs(poisoned_save_path, exist_ok=True)
