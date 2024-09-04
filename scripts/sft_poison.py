@@ -60,7 +60,7 @@ for percentage in poisoning_percentages:
 
     # Define dataset paths
     poisoned_dataset_path = f"../dataset/poisoned/train/poisoned_train_{percentage}/"  # Path to the poisoned dataset folder
-    output_dir = f"../output/poison/sft_results/sft_results_{percentage}/"  # Directory where the model will be saved
+    output_dir = f"../output/poison/sft_results/lora2/sft_results_{percentage}/"  # Directory where the model will be saved
     lora_output_dir = os.path.join(output_dir, "lora_adapter")
 
     # Ensure the output directory exists
@@ -134,10 +134,10 @@ for percentage in poisoning_percentages:
     trainer.train()
     logger.info("Training completed.")
 
-    # logger.info("Saving the trained model...")
-    # # Save the trained model
-    # trainer.save_model(output_dir)
-    # logger.info(f"Model saved to {output_dir}")
+    logger.info("Saving the trained model...")
+    # Save the trained model
+    trainer.save_model(output_dir)
+    logger.info(f"Model saved to {output_dir}")
 
     # Save only the LoRA adapter
     model.save_pretrained(lora_output_dir, save_lora=True)
