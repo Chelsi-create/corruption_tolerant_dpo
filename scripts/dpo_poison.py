@@ -51,7 +51,7 @@ poisoning_percentages = [0.1, 0.5, 1, 4, 5]  # Adjust these values as needed
 
 # Set fixed epochs
 num_epochs = 5  # Run for 5 epochs
-learning_rates = [1.41e-5, 5e-5]  # Example learning rate to try
+learning_rates = [1.41e-5]  # Example learning rate to try
 
 metrics_list = []
 
