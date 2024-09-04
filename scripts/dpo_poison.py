@@ -138,6 +138,12 @@ for percentage in poisoning_percentages:
         dpo_trainer.model.save_pretrained(epoch_output_dir, from_pt=True)
         logger.info(f"Model saved to {epoch_output_dir}")
 
+        # Save the LoRA adapter
+        lora_adapter_output_dir = os.path.join(epoch_output_dir, 'lora_adapter')
+        logger.info(f"Saving the LoRA adapter for {percentage}% poisoned dataset at epoch={epoch}...")
+        dpo_trainer.model.save_adapter(lora_adapter_output_dir, "training_model")
+        logger.info(f"LoRA adapter saved to {lora_adapter_output_dir}")
+
 # Save all metrics to a JSON file
 metrics_output_path = f"{base_output_dir}/training_metrics.json"
 with open(metrics_output_path, "w") as f:
