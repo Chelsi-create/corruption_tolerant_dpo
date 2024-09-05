@@ -49,10 +49,22 @@ eval_dir = "../dataset/poisoned/validation/poisoned_eval_100"
 eval_dataset = load_from_disk(eval_dir)
 eval_formatted_dataset = data_loader.preprocess_poison_for_dpo(eval_dataset)
 
-def check_data_quality(dataset):
-    for column in dataset.column_names:
-        if dataset[column].isnull().any() or not dataset[column].apply(lambda x: x == x).all():
-            print(f"NaNs or invalid values found in column: {column}")
+def check_data_quality(datasets):
+    if isinstance(datasets, list):
+        for i, dataset in enumerate(datasets):
+            logger.info(f"Checking dataset {i}...")
+            if hasattr(dataset, 'column_names'):
+                for column in dataset.column_names:
+                    if dataset[column].isnull().any() or not dataset[column].apply(lambda x: x == x).all():
+                        print(f"NaNs or invalid values found in column: {column} of dataset {i}")
+            else:
+                logger.info(f"Dataset {i} does not have attribute 'column_names'. Skipping...")
+    elif hasattr(datasets, 'column_names'):
+        for column in datasets.column_names:
+            if datasets[column].isnull().any() or not datasets[column].apply(lambda x: x == x).all():
+                print(f"NaNs or invalid values found in column: {column}")
+    else:
+        logger.info("Provided object is not a dataset or a list of datasets.")
 
 check_data_quality(eval_formatted_dataset)
 
