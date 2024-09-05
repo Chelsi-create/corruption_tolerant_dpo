@@ -97,7 +97,8 @@ for percentage in poisoning_percentages:
         num_train_epochs=num_epochs,
         learning_rate=learning_rate,
         optim="rmsprop",
-        bf16=True,
+        fp16=True,
+        bf16=False,
         save_steps=200,  # Save model every 200 steps
         logging_steps=50,
         logging_first_step=True,
