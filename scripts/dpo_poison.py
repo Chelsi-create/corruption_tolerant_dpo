@@ -48,6 +48,7 @@ data_loader = DataLoad(config)
 eval_dir = "../dataset/poisoned/validation/poisoned_eval_100"
 eval_dataset = load_from_disk(eval_dir)
 eval_formatted_dataset = data_loader.preprocess_poison_for_dpo(eval_dataset)
+logger.info(f"Type of eval_formatted_dataset: {type(eval_formatted_dataset)}")
 
 def check_data_quality(datasets):
     if isinstance(datasets, list):
@@ -66,7 +67,7 @@ def check_data_quality(datasets):
     else:
         logger.info("Provided object is not a dataset or a list of datasets.")
 
-check_data_quality(eval_formatted_dataset)
+# check_data_quality(eval_formatted_dataset)
 
 # Define the percentages of poisoning to evaluate
 poisoning_percentages = [0.1]  # Adjust these values as needed
