@@ -49,6 +49,7 @@ eval_dir = "../dataset/poisoned/validation/poisoned_eval_100"
 eval_dataset = load_from_disk(eval_dir)
 eval_formatted_dataset = data_loader.preprocess_poison_for_dpo(eval_dataset)
 logger.info(f"Type of eval_formatted_dataset: {type(eval_formatted_dataset)}")
+print(eval_formatted_dataset[0])
 
 def check_data_quality(datasets):
     if isinstance(datasets, list):
