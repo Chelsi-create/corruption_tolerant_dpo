@@ -31,7 +31,7 @@ base_sft_model_path = "../output/poison/sft_results/lora1/sft_results_"  # Base 
 base_output_dir = "../output/poison/dpo_results/lora1/dpo_results_"  # Base directory where the DPO results will be saved
 cache_dir = "/nfs/hpc/share/jainc/"  # Directory to store cached files
 beta = 0.1  # Beta value for DPO
-learning_rate = 1.41e-5  # Fixed learning rate
+learning_rate = 1e-6  # Fixed learning rate
 
 logger.info("Loading configuration and credentials...")
 script_dir = os.path.dirname(os.path.abspath(__file__))
