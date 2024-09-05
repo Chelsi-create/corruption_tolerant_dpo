@@ -71,7 +71,7 @@ for percentage in poisoning_percentages:
     peft_config.base_model_name_or_path = "meta-llama/Llama-2-7b-hf"
     
     # Load model for training
-    model = AutoModelForCausalLM.from_pretrained(peft_config.base_model_name_or_path, device_map="cuda", cache_dir=cache_dir, token=token)
+    model = AutoModelForCausalLM.from_pretrained(peft_config.base_model_name_or_path, device_map="auto", cache_dir=cache_dir, token=token)
     model.config.use_cache = False
     model = PeftModel.from_pretrained(model, sft_model_path, is_trainable=True, adapter_name="training_model", cache_dir=cache_dir, token=token)
     model.load_adapter(sft_model_path, adapter_name="reference_model")
@@ -79,7 +79,7 @@ for percentage in poisoning_percentages:
     torch.cuda.empty_cache()
 
     # Load the reference model, ensure it is not trainable and it is a separate instance from the model
-    ref_model = AutoModelForCausalLM.from_pretrained(peft_config.base_model_name_or_path, device_map="cuda", cache_dir=cache_dir, token=token)
+    ref_model = AutoModelForCausalLM.from_pretrained(peft_config.base_model_name_or_path, device_map="auto", cache_dir=cache_dir, token=token)
     ref_model = PeftModel.from_pretrained(ref_model, sft_model_path, is_trainable=False, adapter_name="training_model", cache_dir=cache_dir, token=token)
     ref_model.load_adapter(sft_model_path, adapter_name="reference_model")
 
