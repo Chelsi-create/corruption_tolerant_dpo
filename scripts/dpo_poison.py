@@ -49,6 +49,13 @@ eval_dir = "../dataset/poisoned/validation/poisoned_eval_100"
 eval_dataset = load_from_disk(eval_dir)
 eval_formatted_dataset = data_loader.preprocess_poison_for_dpo(eval_dataset)
 
+def check_data_quality(dataset):
+    for column in dataset.column_names:
+        if dataset[column].isnull().any() or not dataset[column].apply(lambda x: x == x).all():
+            print(f"NaNs or invalid values found in column: {column}")
+
+check_data_quality(eval_formatted_dataset)
+
 # Define the percentages of poisoning to evaluate
 poisoning_percentages = [0.1]  # Adjust these values as needed
 
