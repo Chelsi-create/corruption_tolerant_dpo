@@ -120,7 +120,7 @@ for percentage in poisoning_percentages:
     dpo_trainer = DPOTrainer(
         model=model,
         # ref_model=ref_model,  # Use the separate reference model
-        model_adapter_name="training model",
+        # model_adapter_name="training model",
         ref_adapter_name="reference model",
         args=training_args,
         train_dataset=train_formatted_dataset,
