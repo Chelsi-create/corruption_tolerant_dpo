@@ -8,6 +8,8 @@ import sys
 import logging
 import json
 
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
+
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
