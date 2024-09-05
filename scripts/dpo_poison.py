@@ -103,6 +103,7 @@ for percentage in poisoning_percentages:
         optim="rmsprop",
         fp16=True,
         bf16=False,
+        gradient_checkpointing=True,
         save_steps=200,  # Save model every 200 steps
         logging_steps=50,
         logging_first_step=True,
