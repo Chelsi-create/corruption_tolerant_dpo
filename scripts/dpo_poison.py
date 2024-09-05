@@ -48,27 +48,31 @@ data_loader = DataLoad(config)
 eval_dir = "../dataset/poisoned/validation/poisoned_eval_100"
 eval_dataset = load_from_disk(eval_dir)
 eval_formatted_dataset = data_loader.preprocess_poison_for_dpo(eval_dataset)
-logger.info(f"Type of eval_formatted_dataset: {type(eval_formatted_dataset)}")
-print(eval_formatted_dataset[0])
 
 def check_data_quality(datasets):
     if isinstance(datasets, list):
-        for i, dataset in enumerate(datasets):
-            logger.info(f"Checking dataset {i}...")
-            if hasattr(dataset, 'column_names'):
-                for column in dataset.column_names:
-                    if dataset[column].isnull().any() or not dataset[column].apply(lambda x: x == x).all():
-                        print(f"NaNs or invalid values found in column: {column} of dataset {i}")
+        for i, data in enumerate(datasets):
+            if isinstance(data, dict):
+                logger.info(f"Checking data item {i}...")
+                
+                # Check if essential keys exist
+                required_keys = ['prompt', 'chosen', 'rejected']
+                for key in required_keys:
+                    if key not in data:
+                        logger.warning(f"Missing key '{key}' in data item {i}.")
+                
+                # Check for None or NaN values in each key
+                for key, value in data.items():
+                    if value is None or (isinstance(value, float) and isnan(value)):
+                        logger.warning(f"None or NaN found in key '{key}' of data item {i}.")
+                    elif isinstance(value, str) and value.strip() == "":
+                        logger.warning(f"Empty string found in key '{key}' of data item {i}.")
             else:
-                logger.info(f"Dataset {i} does not have attribute 'column_names'. Skipping...")
-    elif hasattr(datasets, 'column_names'):
-        for column in datasets.column_names:
-            if datasets[column].isnull().any() or not datasets[column].apply(lambda x: x == x).all():
-                print(f"NaNs or invalid values found in column: {column}")
+                logger.warning(f"Data item {i} is not a dictionary. Skipping...")
     else:
-        logger.info("Provided object is not a dataset or a list of datasets.")
+        logger.warning("Provided object is not a list of dictionaries.")
 
-# check_data_quality(eval_formatted_dataset)
+check_data_quality(eval_formatted_dataset)
 
 # Define the percentages of poisoning to evaluate
 poisoning_percentages = [0.1]  # Adjust these values as needed
