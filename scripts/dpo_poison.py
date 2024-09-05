@@ -16,7 +16,7 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler('dpo_training.log')
+        logging.FileHandler('dpo_training_debug.log')
     ]
 )
 logger = logging.getLogger(__name__)
@@ -76,13 +76,15 @@ for percentage in poisoning_percentages:
     model = PeftModel.from_pretrained(model, sft_model_path, is_trainable=True, adapter_name="training_model", cache_dir=cache_dir, token=token)
     model.load_adapter(sft_model_path, adapter_name="reference_model")
 
+    # Log initial weights of the first layer
+    logger.info(f"Initial weights of the first layer q_proj: {model.base_model.model.model.layers[0].self_attn.q_proj.weight}")
+
     torch.cuda.empty_cache()
 
     # Load the reference model, ensure it is not trainable and it is a separate instance from the model
     ref_model = AutoModelForCausalLM.from_pretrained(peft_config.base_model_name_or_path, device_map="auto", cache_dir=cache_dir, token=token)
     ref_model = PeftModel.from_pretrained(ref_model, sft_model_path, is_trainable=False, adapter_name="training_model", cache_dir=cache_dir, token=token)
     ref_model.load_adapter(sft_model_path, adapter_name="reference_model")
-    ref_model.eval()
 
     tokenizer = AutoTokenizer.from_pretrained(peft_config.base_model_name_or_path, padding_side='left', cache_dir=cache_dir, token=token)
     if tokenizer.pad_token is None:
@@ -93,6 +95,15 @@ for percentage in poisoning_percentages:
     poisoned_dataset_path = f"../dataset/poisoned/train/poisoned_train_{percentage}/"
     train_dataset = load_from_disk(poisoned_dataset_path)
     train_formatted_dataset = data_loader.preprocess_poison_for_dpo(train_dataset)
+
+    # Debugging: Log the input batch to verify training loop
+    logger.info("Logging input batch to verify training loop...")
+    for step, batch in enumerate(train_formatted_dataset):
+        logger.info(f"Batch {step} input_ids: {batch['prompt']}")
+        logger.info(f"Batch {step} chosen_response: {batch['chosen']}")
+        logger.info(f"Batch {step} rejected_response: {batch['rejected']}")
+        if step == 0:
+            break
 
     # Set training arguments
     training_args = TrainingArguments(
@@ -132,6 +143,12 @@ for percentage in poisoning_percentages:
     for epoch in range(1, num_epochs + 1):
         logger.info(f"Starting training for {percentage}% poisoned dataset, learning_rate={learning_rate}, epoch={epoch}...")
         result = dpo_trainer.train(resume_from_checkpoint=None)  # Set `resume_from_checkpoint` if resuming
+
+        # Log gradients after each epoch
+        logger.info(f"Logging gradients for epoch {epoch}...")
+        for name, param in model.named_parameters():
+            if param.grad is not None:
+                logger.info(f"Gradients for {name}: {param.grad}")
 
         # Save metrics
         metrics = result.metrics
