@@ -49,31 +49,6 @@ eval_dir = "../dataset/poisoned/validation/poisoned_eval_100"
 eval_dataset = load_from_disk(eval_dir)
 eval_formatted_dataset = data_loader.preprocess_poison_for_dpo(eval_dataset)
 
-def check_data_quality(datasets):
-    if isinstance(datasets, list):
-        for i, data in enumerate(datasets):
-            if isinstance(data, dict):
-                logger.info(f"Checking data item {i}...")
-                
-                # Check if essential keys exist
-                required_keys = ['prompt', 'chosen', 'rejected']
-                for key in required_keys:
-                    if key not in data:
-                        logger.warning(f"Missing key '{key}' in data item {i}.")
-                
-                # Check for None or NaN values in each key
-                for key, value in data.items():
-                    if value is None or (isinstance(value, float) and isnan(value)):
-                        logger.warning(f"None or NaN found in key '{key}' of data item {i}.")
-                    elif isinstance(value, str) and value.strip() == "":
-                        logger.warning(f"Empty string found in key '{key}' of data item {i}.")
-            else:
-                logger.warning(f"Data item {i} is not a dictionary. Skipping...")
-    else:
-        logger.warning("Provided object is not a list of dictionaries.")
-
-check_data_quality(eval_formatted_dataset)
-
 # Define the percentages of poisoning to evaluate
 poisoning_percentages = [0.1]  # Adjust these values as needed
 
@@ -107,6 +82,7 @@ for percentage in poisoning_percentages:
     ref_model = AutoModelForCausalLM.from_pretrained(peft_config.base_model_name_or_path, device_map="auto", cache_dir=cache_dir, token=token)
     ref_model = PeftModel.from_pretrained(ref_model, sft_model_path, is_trainable=False, adapter_name="training_model", cache_dir=cache_dir, token=token)
     ref_model.load_adapter(sft_model_path, adapter_name="reference_model")
+    ref_model.eval()
 
     tokenizer = AutoTokenizer.from_pretrained(peft_config.base_model_name_or_path, padding_side='left', cache_dir=cache_dir, token=token)
     if tokenizer.pad_token is None:
