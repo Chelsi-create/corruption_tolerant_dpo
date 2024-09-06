@@ -210,8 +210,10 @@ class DataLoad:
             dpo_dataset_dict["prompt"].append(prompt)
             dpo_dataset_dict["chosen"].append(chosen_response)
             dpo_dataset_dict["rejected"].append(rejected_response)
+
+        dpo_dataset = Dataset.from_dict(dpo_dataset_dict)
     
-        return dpo_dataset_dict
+        return dpo_dataset
 
 
     def format_dataset_for_dpo_score(self, dataset):
