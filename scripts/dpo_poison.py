@@ -111,7 +111,7 @@ for percentage in poisoning_percentages:
     # Set training arguments
     training_args = TrainingArguments(
         output_dir=f"{output_dir}/lr_{learning_rate}",
-        per_device_train_batch_size=2,
+        per_device_train_batch_size=1,
         gradient_accumulation_steps=16,
         num_train_epochs=num_epochs,
         learning_rate=learning_rate,
