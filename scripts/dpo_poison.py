@@ -76,9 +76,6 @@ for percentage in poisoning_percentages:
     model = PeftModel.from_pretrained(model, sft_model_path, is_trainable=True, adapter_name="training_model", cache_dir=cache_dir, token=token)
     model.load_adapter(sft_model_path, adapter_name="reference_model")
 
-    # Log initial weights of the first layer
-    logger.info(f"Initial weights of the first layer q_proj: {model.base_model.model.model.layers[0].self_attn.q_proj.weight}")
-
     torch.cuda.empty_cache()
 
     # Load the reference model, ensure it is not trainable and it is a separate instance from the model
@@ -96,14 +93,7 @@ for percentage in poisoning_percentages:
     train_dataset = load_from_disk(poisoned_dataset_path)
     train_formatted_dataset = data_loader.preprocess_poison_for_dpo(train_dataset)
 
-    # Debugging: Log the input batch to verify training loop
-    logger.info("Logging input batch to verify training loop...")
-    for step, batch in enumerate(train_formatted_dataset):
-        logger.info(f"Batch {step} input_ids: {batch['prompt']}")
-        logger.info(f"Batch {step} chosen_response: {batch['chosen']}")
-        logger.info(f"Batch {step} rejected_response: {batch['rejected']}")
-        if step == 0:
-            break
+    print(train_formatted_dataset[0])
 
     # Set training arguments
     training_args = TrainingArguments(
