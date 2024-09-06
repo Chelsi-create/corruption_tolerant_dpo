@@ -93,8 +93,20 @@ for percentage in poisoning_percentages:
     train_dataset = load_from_disk(poisoned_dataset_path)
     train_formatted_dataset = data_loader.preprocess_poison_for_dpo(train_dataset)
 
-    print(train_formatted_dataset[0])
-    print(train_formatted_dataset[1])
+    # Add logging after tokenization for checking outputs
+    logger.info("Tokenizing a sample from the dataset...")
+    sample_prompt = train_formatted_dataset[0]["prompt"]
+    sample_chosen = train_formatted_dataset[0]["chosen"]
+    sample_rejected = train_formatted_dataset[0]["rejected"]
+    
+    # Tokenize the prompt, chosen, and rejected responses
+    sample_prompt_tokenized = tokenizer(sample_prompt, return_tensors='pt')
+    sample_chosen_tokenized = tokenizer(sample_chosen, return_tensors='pt')
+    sample_rejected_tokenized = tokenizer(sample_rejected, return_tensors='pt')
+    
+    logger.info(f"Tokenized prompt: {sample_prompt_tokenized}")
+    logger.info(f"Tokenized chosen: {sample_chosen_tokenized}")
+    logger.info(f"Tokenized rejected: {sample_rejected_tokenized}")
 
     # Set training arguments
     training_args = TrainingArguments(
