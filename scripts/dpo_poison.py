@@ -94,6 +94,7 @@ for percentage in poisoning_percentages:
     train_formatted_dataset = data_loader.preprocess_poison_for_dpo(train_dataset)
 
     print(train_formatted_dataset[0])
+    print(train_formatted_dataset[1])
 
     # Set training arguments
     training_args = TrainingArguments(
