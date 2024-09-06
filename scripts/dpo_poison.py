@@ -53,7 +53,7 @@ eval_formatted_dataset = data_loader.preprocess_poison_for_dpo(eval_dataset)
 poisoning_percentages = [0.1]  # Adjust these values as needed
 
 # Set fixed epochs
-num_epochs = 5  # Run for 5 epochs
+num_epochs = 4  # Run for 5 epochs
 
 metrics_list = []
 
