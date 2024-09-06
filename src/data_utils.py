@@ -182,38 +182,38 @@ class DataLoad:
         logging.info("Preprocessing for DPO completed.")
         return formatted_dataset
 
-    # def preprocess_poison_for_dpo(self, dataset):
-    #     formatted_examples = []
-    #     for example in dataset:
-    #         formatted_example = {
-    #             "prompt": example[self.config['dataset']['prompt_column']],
-    #             "chosen": example[self.config['dataset']['response_0_column']] if example[self.config['dataset']['safer_response_id_column']] == 0 else example[self.config['dataset']['response_1_column']],
-    #             "rejected": example[self.config['dataset']['response_1_column']] if example[self.config['dataset']['safer_response_id_column']] == 0 else example[self.config['dataset']['response_0_column']]
-    #         }
-    #         formatted_examples.append(formatted_example)
-
-    #     return formatted_examples
-
     def preprocess_poison_for_dpo(self, dataset):
-        dpo_dataset_dict = {
-            "prompt": [],
-            "chosen": [],
-            "rejected": []
-        }
-        
+        formatted_examples = []
         for example in dataset:
-            prompt = example[self.config['dataset']['prompt_column']]
-            chosen_response = example[self.config['dataset']['response_0_column']] if example[self.config['dataset']['safer_response_id_column']] == 0 else example[self.config['dataset']['response_1_column']]
-            rejected_response = example[self.config['dataset']['response_1_column']] if example[self.config['dataset']['safer_response_id_column']] == 0 else example[self.config['dataset']['response_0_column']]
-            
-            # Append to respective lists
-            dpo_dataset_dict["prompt"].append(prompt)
-            dpo_dataset_dict["chosen"].append(chosen_response)
-            dpo_dataset_dict["rejected"].append(rejected_response)
+            formatted_example = {
+                "prompt": example[self.config['dataset']['prompt_column']],
+                "chosen": example[self.config['dataset']['response_0_column']] if example[self.config['dataset']['safer_response_id_column']] == 0 else example[self.config['dataset']['response_1_column']],
+                "rejected": example[self.config['dataset']['response_1_column']] if example[self.config['dataset']['safer_response_id_column']] == 0 else example[self.config['dataset']['response_0_column']]
+            }
+            formatted_examples.append(formatted_example)
 
-        dpo_dataset = Dataset.from_dict(dpo_dataset_dict)
+        return formatted_examples
+
+    # def preprocess_poison_for_dpo(self, dataset):
+    #     dpo_dataset_dict = {
+    #         "prompt": [],
+    #         "chosen": [],
+    #         "rejected": []
+    #     }
+        
+    #     for example in dataset:
+    #         prompt = example[self.config['dataset']['prompt_column']]
+    #         chosen_response = example[self.config['dataset']['response_0_column']] if example[self.config['dataset']['safer_response_id_column']] == 0 else example[self.config['dataset']['response_1_column']]
+    #         rejected_response = example[self.config['dataset']['response_1_column']] if example[self.config['dataset']['safer_response_id_column']] == 0 else example[self.config['dataset']['response_0_column']]
+            
+    #         # Append to respective lists
+    #         dpo_dataset_dict["prompt"].append(prompt)
+    #         dpo_dataset_dict["chosen"].append(chosen_response)
+    #         dpo_dataset_dict["rejected"].append(rejected_response)
+
+    #     dpo_dataset = Dataset.from_dict(dpo_dataset_dict)
     
-        return dpo_dataset
+    #     return dpo_dataset
 
 
     def format_dataset_for_dpo_score(self, dataset):
