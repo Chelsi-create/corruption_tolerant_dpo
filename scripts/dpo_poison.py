@@ -103,7 +103,7 @@ for percentage in poisoning_percentages:
         gradient_accumulation_steps=16,
         num_train_epochs=num_epochs,
         learning_rate=learning_rate,
-        optim="rmsprop",
+        optim="adamw",
         fp16=True,
         bf16=False,
         gradient_checkpointing=True,
