@@ -128,6 +128,7 @@ for percentage in poisoning_percentages:
         evaluation_strategy="steps",  
         save_strategy="steps", 
         eval_steps=500,
+        lr_scheduler_type="cosine"
     )
 
     logger.info("Initializing DPO Trainer")
