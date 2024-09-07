@@ -118,8 +118,8 @@ for percentage in poisoning_percentages:
         optim="adamw_hf",
         fp16=False,
         bf16=False,
-        gradient_checkpointing=True,
-        max_grad_norm=1.0,
+        gradient_checkpointing=False,
+        max_grad_norm=5.0,
         save_steps=200,  # Save model every 200 steps
         logging_steps=50,
         logging_first_step=True,
