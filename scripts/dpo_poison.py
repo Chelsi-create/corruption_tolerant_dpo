@@ -116,7 +116,7 @@ for percentage in poisoning_percentages:
         num_train_epochs=num_epochs,
         learning_rate=learning_rate,
         optim="adamw_hf",
-        fp16=True,
+        fp16=False,
         bf16=False,
         gradient_checkpointing=True,
         max_grad_norm=5.0,
