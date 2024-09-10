@@ -42,7 +42,7 @@ use_auth_token = True
 response_separator = "[RESPONSE]"
 
 # Define the percentages of poisoning to evaluate
-poisoning_percentages = [20.0]  # Adjust as needed
+poisoning_percentages = [30.0]  # Adjust as needed
 
 # Adjust completion field creation logic based on safer_response_id
 def create_completion_field(example):
