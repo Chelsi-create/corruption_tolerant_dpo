@@ -53,9 +53,14 @@ eval_formatted_dataset = data_loader.preprocess_poison_for_dpo(eval_dataset)
 poisoning_percentages = [0.1]  # Adjust these values as needed
 
 # Set fixed epochs
-num_epochs = 4  # Run for 5 epochs
+num_epochs = 4  # Run for 4 epochs
 
 metrics_list = []
+
+# Check if multiple GPUs are available and use DataParallel
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+n_gpus = torch.cuda.device_count()
+logger.info(f"Number of GPUs available: {n_gpus}")
 
 for percentage in poisoning_percentages:
     logger.info(f"Processing {percentage}% poisoned dataset...")
@@ -71,17 +76,23 @@ for percentage in poisoning_percentages:
     peft_config.base_model_name_or_path = "meta-llama/Llama-2-7b-hf"
     
     # Load model for training
-    model = AutoModelForCausalLM.from_pretrained(peft_config.base_model_name_or_path, device_map="auto", cache_dir=cache_dir, token=token)
+    model = AutoModelForCausalLM.from_pretrained(peft_config.base_model_name_or_path, cache_dir=cache_dir, torch_dtype=torch.float16)
     model.config.use_cache = False
     model = PeftModel.from_pretrained(model, sft_model_path, is_trainable=True, adapter_name="training_model", cache_dir=cache_dir, token=token)
     model.load_adapter(sft_model_path, adapter_name="reference_model")
 
+    # Wrap model with DataParallel for multiple GPUs
+    if n_gpus > 1:
+        model = torch.nn.DataParallel(model)
+
+    model.to(device)
     torch.cuda.empty_cache()
 
     # Load the reference model, ensure it is not trainable and it is a separate instance from the model
     ref_model = AutoModelForCausalLM.from_pretrained(peft_config.base_model_name_or_path, device_map="auto", cache_dir=cache_dir, token=token)
     ref_model = PeftModel.from_pretrained(ref_model, sft_model_path, is_trainable=False, adapter_name="training_model", cache_dir=cache_dir, token=token)
     ref_model.load_adapter(sft_model_path, adapter_name="reference_model")
+    ref_model = ref_model.to(device)
 
     tokenizer = AutoTokenizer.from_pretrained(peft_config.base_model_name_or_path, padding_side='left', cache_dir=cache_dir, token=token)
     if tokenizer.pad_token is None:
@@ -100,9 +111,9 @@ for percentage in poisoning_percentages:
     sample_rejected = train_formatted_dataset[0]["rejected"]
     
     # Tokenize the prompt, chosen, and rejected responses
-    sample_prompt_tokenized = tokenizer(sample_prompt, return_tensors='pt')
-    sample_chosen_tokenized = tokenizer(sample_chosen, return_tensors='pt')
-    sample_rejected_tokenized = tokenizer(sample_rejected, return_tensors='pt')
+    sample_prompt_tokenized = tokenizer(sample_prompt, return_tensors='pt').to(device)
+    sample_chosen_tokenized = tokenizer(sample_chosen, return_tensors='pt').to(device)
+    sample_rejected_tokenized = tokenizer(sample_rejected, return_tensors='pt').to(device)
     
     logger.info(f"Tokenized prompt: {sample_prompt_tokenized}")
     logger.info(f"Tokenized chosen: {sample_chosen_tokenized}")
