@@ -115,9 +115,8 @@ for percentage in poisoning_percentages:
         gradient_accumulation_steps=16,
         num_train_epochs=num_epochs,
         learning_rate=learning_rate,
-        optim="adamw_hf",
-        fp16=False,
-        bf16=False,
+        optim="rmsprop",
+        bf16=True,
         gradient_checkpointing=True,
         max_grad_norm=5.0,
         save_steps=200,  # Save model every 200 steps
