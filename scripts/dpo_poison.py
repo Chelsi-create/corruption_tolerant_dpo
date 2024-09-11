@@ -172,4 +172,4 @@ metrics_output_path = f"{base_output_dir}/training_metrics.json"
 with open(metrics_output_path, "w") as f:
     json.dump(metrics_list, f)
 
-logger.info(f"All training processes completed. Metrics saved to {metrics_output_path}.")s
+logger.info(f"All training processes completed. Metrics saved to {metrics_output_path}.")
