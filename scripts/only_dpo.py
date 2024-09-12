@@ -104,8 +104,8 @@ for percentage in poisoning_percentages:
         gradient_accumulation_steps=16,
         num_train_epochs=num_epochs,
         learning_rate=learning_rate,
-        optim="adamw_hf",
-        bf16=True,  # Using bf16
+        optim="rmsprop",
+        bf16=True, 
         gradient_checkpointing=False,
         max_grad_norm=1.0,
         save_steps=200,  # Save model every 200 steps
@@ -153,15 +153,15 @@ for percentage in poisoning_percentages:
         metrics_list.append(metrics)
 
         # Save the trained model after each epoch
-        epoch_output_dir = f"{output_dir}/percentage_{percentage}_epoch_{epoch}_lr_{learning_rate}"
+        epoch_output_dir = f"{output_dir}/percentage_{percentage}_epoch_{epoch}"
         logger.info(f"Saving the model for {percentage}% poisoned dataset at epoch={epoch}, learning_rate={learning_rate}...")
-        dpo_trainer.model.save_pretrained(epoch_output_dir, from_pt=True)
+        model.save_pretrained(epoch_output_dir, from_pt=True)
         logger.info(f"Model saved to {epoch_output_dir}")
 
-        # Save the LoRA adapter
-        lora_adapter_output_dir = os.path.join(epoch_output_dir, 'lora_adapter')
-        logger.info(f"Saving the LoRA adapter for {percentage}% poisoned dataset at epoch={epoch}...")
-        dpo_trainer.model.save_adapter(lora_adapter_output_dir, "training_model")
+        # Save the LoRA adapter separately for each epoch
+        lora_adapter_output_dir = os.path.join(epoch_output_dir, 'lora_adapter_epoch_' + str(epoch))
+        logger.info(f"Saving the LoRA adapter for {percentage}% poisoned dataset, epoch={epoch}...")
+        model.save_pretrained(lora_adapter_output_dir)
         logger.info(f"LoRA adapter saved to {lora_adapter_output_dir}")
 
 # Save all metrics to a JSON file
