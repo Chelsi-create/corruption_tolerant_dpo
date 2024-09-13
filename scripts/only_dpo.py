@@ -153,16 +153,23 @@ for percentage in poisoning_percentages:
         metrics_list.append(metrics)
 
         # Save the trained model after each epoch
-        epoch_output_dir = f"{output_dir}/percentage_{percentage}_epoch_{epoch}"
-        logger.info(f"Saving the model for {percentage}% poisoned dataset at epoch={epoch}, learning_rate={learning_rate}...")
-        model.save_pretrained(epoch_output_dir, from_pt=True)
-        logger.info(f"Model saved to {epoch_output_dir}")
-
-        # Save the LoRA adapter separately for each epoch
-        lora_adapter_output_dir = os.path.join(epoch_output_dir, 'lora_adapter_epoch_' + str(epoch))
-        logger.info(f"Saving the LoRA adapter for {percentage}% poisoned dataset, epoch={epoch}...")
-        model.save_pretrained(lora_adapter_output_dir)
-        logger.info(f"LoRA adapter saved to {lora_adapter_output_dir}")
+        if accelerator.is_main_process:
+            epoch_output_dir = f"{output_dir}/percentage_{percentage}_epoch_{epoch}"
+            logger.info(f"Saving the model for {percentage}% poisoned dataset at epoch={epoch}, learning_rate={learning_rate}...")
+            if isinstance(model, torch.nn.parallel.DistributedDataParallel):
+                model.module.save_pretrained(epoch_output_dir, from_pt=True)
+            else:
+                model.save_pretrained(epoch_output_dir, from_pt=True)
+            logger.info(f"Model saved to {epoch_output_dir}")
+    
+            # Save the LoRA adapter separately for each epoch
+            lora_adapter_output_dir = os.path.join(epoch_output_dir, 'lora_adapter_epoch_' + str(epoch))
+            logger.info(f"Saving the LoRA adapter for {percentage}% poisoned dataset, epoch={epoch}...")
+            if isinstance(model, torch.nn.parallel.DistributedDataParallel):
+                model.module.save_pretrained(lora_adapter_output_dir)
+            else:
+                model.save_pretrained(lora_adapter_output_dir)
+            logger.info(f"LoRA adapter saved to {lora_adapter_output_dir}")
 
 # Save all metrics to a JSON file
 metrics_output_path = f"{base_output_dir}/training_metrics.json"
