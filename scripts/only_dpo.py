@@ -1,4 +1,4 @@
-import torch
+16import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from trl import DPOTrainer
 from datasets import load_from_disk
@@ -79,8 +79,8 @@ for percentage in poisoning_percentages:
     # Apply LoRA
     logger.info("Applying LoRA...")
     lora_config = LoraConfig(
-        r=8,  # LoRA rank
-        lora_alpha=16,  # LoRA alpha
+        r=16,  # LoRA rank
+        lora_alpha=32,  # LoRA alpha
         lora_dropout=0.1,  # LoRA dropout
         target_modules=["q_proj", "v_proj"],  # LoRA applied to specific layers
         bias="none",
