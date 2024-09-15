@@ -8,9 +8,13 @@ import sys
 import logging
 import json
 from accelerate import Accelerator
+import wandb  # Import wandb for Weights and Biases integration
 
 # Initialize the Accelerator
 accelerator = Accelerator()
+
+# Initialize Weights and Biases
+wandb.init(project="dpo_training_project")  # Initialize your W&B project
 
 # Set up logging
 logging.basicConfig(
@@ -30,10 +34,11 @@ from src.data_utils import DataLoad
 
 # Configuration
 base_model_path = "meta-llama/Llama-2-7b-chat-hf"  # Base model path without SFT
-base_output_dir = "../output/poison/dpo_results/lora1/dpo_results_"  # Base directory where the DPO results will be saved
+base_output_dir = "../output/poison/dpo_results/lora2/dpo_results_"  # Base directory where the DPO results will be saved
 cache_dir = "/nfs/hpc/share/jainc/"  # Directory to store cached files
 beta = 0.1  # Beta value for DPO
 learning_rate = 1e-5  # Fixed learning rate
+save_steps = 50  # Save model every 200 steps
 
 logger.info("Loading configuration and credentials...")
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -108,15 +113,16 @@ for percentage in poisoning_percentages:
         bf16=True, 
         gradient_checkpointing=False,
         max_grad_norm=1.0,
-        save_steps=200,  # Save model every 200 steps
-        logging_steps=50,
+        save_steps=save_steps,  # Save model every 200 steps
+        logging_steps=save_steps,  # Log at every `save_steps` interval
         logging_first_step=True,
         remove_unused_columns=False,
         load_best_model_at_end=False,  # We will save after each epoch manually
         evaluation_strategy="steps",  
         save_strategy="steps", 
-        eval_steps=500,
-        lr_scheduler_type="cosine"
+        eval_steps=save_steps,  # Evaluate and log every `save_steps` steps
+        lr_scheduler_type="cosine",
+        report_to="wandb"  # Report results to Weights and Biases (W&B)
     )
 
     logger.info("Initializing DPO Trainer")
@@ -139,13 +145,18 @@ for percentage in poisoning_percentages:
         logger.info(f"Starting training for {percentage}% poisoned dataset, learning_rate={learning_rate}, epoch={epoch}...")
         result = dpo_trainer.train(resume_from_checkpoint=None)  # Set `resume_from_checkpoint` if resuming
 
-        # Log gradients after each epoch
-        logger.info(f"Logging gradients for epoch {epoch}...")
-        for name, param in model.named_parameters():
-            if param.grad is not None:
-                logger.info(f"Gradients for {name}: {param.grad}")
+        # Log metrics to W&B at each save step
+        for step, log in enumerate(dpo_trainer.state.log_history):
+            if step % save_steps == 0:  # Log at every save step interval
+                wandb.log({
+                    "step": step,
+                    "epoch": epoch,
+                    "train_loss": log.get("loss", None),  # Log training loss
+                    "learning_rate": log.get("learning_rate", learning_rate),
+                    "poisoning_percentage": percentage,
+                })
 
-        # Save metrics
+        # Save metrics after every save step
         metrics = result.metrics
         metrics['epoch'] = epoch
         metrics['learning_rate'] = learning_rate
@@ -177,3 +188,4 @@ for percentage in poisoning_percentages:
         json.dump(metrics_list, f)
 
 logger.info(f"All training processes completed. Metrics saved to {metrics_output_path}.")
+wandb.finish()  # End the W&B run
