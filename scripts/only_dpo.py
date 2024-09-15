@@ -171,9 +171,9 @@ for percentage in poisoning_percentages:
                 model.save_pretrained(lora_adapter_output_dir)
             logger.info(f"LoRA adapter saved to {lora_adapter_output_dir}")
 
-# Save all metrics to a JSON file
-metrics_output_path = f"{base_output_dir}/training_metrics.json"
-with open(metrics_output_path, "w") as f:
-    json.dump(metrics_list, f)
+    # Save all metrics to a JSON file
+    metrics_output_path = f"{base_output_dir}{percentage}/training_metrics.json"
+    with open(metrics_output_path, "w") as f:
+        json.dump(metrics_list, f)
 
 logger.info(f"All training processes completed. Metrics saved to {metrics_output_path}.")
