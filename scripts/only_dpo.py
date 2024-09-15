@@ -38,7 +38,7 @@ base_output_dir = "../output/poison/dpo_results/lora2/dpo_results_"  # Base dire
 cache_dir = "/nfs/hpc/share/jainc/"  # Directory to store cached files
 beta = 0.1  # Beta value for DPO
 learning_rate = 1e-5  # Fixed learning rate
-save_steps = 50  # Save model every 200 steps
+save_steps = 150  # Save model every 200 steps
 
 logger.info("Loading configuration and credentials...")
 script_dir = os.path.dirname(os.path.abspath(__file__))
