@@ -34,7 +34,7 @@ from src.data_utils import DataLoad
 
 # Configuration
 base_model_path = "meta-llama/Llama-2-7b-chat-hf"  # Base model path without SFT
-base_output_dir = "../output/clean/dpo_results/lora2/"  # Base directory where the DPO results will be saved
+base_output_dir = "../output/clean_only_dpo/lora2/"  # Base directory where the DPO results will be saved
 cache_dir = "/nfs/hpc/share/jainc/"  # Directory to store cached files
 beta = 0.1  # Beta value for DPO
 learning_rate = 1.41e-5  # Fixed learning rate
