@@ -52,9 +52,12 @@ token = credentials['hugging_face']['token']
 logger.info("Initializing the DataLoader...")
 data_loader = DataLoad(config)
 
-eval_dir = "../dataset/processed/validation"
-eval_dataset = load_from_disk(eval_dir)
-eval_formatted_dataset = data_loader.preprocess_for_dpo(eval_dataset)
+# eval_dir = "../dataset/processed/validation"
+# eval_dataset = load_from_disk(eval_dir)
+# eval_formatted_dataset = data_loader.preprocess_for_dpo(eval_dataset)
+logger.info("Loading and preprocessing the dataset...")
+dataset = data_loader.load_saved_data()
+formatted_dataset = data_loader.preprocess_for_dpo(dataset)
 
 # Set fixed epochs
 num_epochs = 4  # Run for 4 epochs
@@ -91,9 +94,9 @@ if tokenizer.pad_token is None:
     tokenizer.pad_token = tokenizer.eos_token
 
 # Load and preprocess the dataset
-logger.info("Loading and preprocessing the dataset...")
-train_dataset = load_from_disk("../dataset/processed/train")
-train_formatted_dataset = data_loader.preprocess_for_dpo(train_dataset)
+
+# train_dataset = load_from_disk("../dataset/processed/train")
+# train_formatted_dataset = data_loader.preprocess_for_dpo(train_dataset)
 
 # Set training arguments
 training_args = TrainingArguments(
@@ -120,8 +123,8 @@ dpo_trainer = DPOTrainer(
     model=model,
     ref_model=None,  # No reference model in this case
     args=training_args,
-    train_dataset=train_formatted_dataset,
-    eval_dataset=eval_formatted_dataset,
+    train_dataset=formatted_dataset['train'],
+    eval_dataset=formatted_dataset['test'],
     tokenizer=tokenizer,
     beta=beta,
     max_length=1024,
