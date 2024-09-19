@@ -38,7 +38,7 @@ base_output_dir = "../output/poison/dpo_results/lora2/dpo_results_"  # Base dire
 cache_dir = "/nfs/hpc/share/jainc/"  # Directory to store cached files
 beta = 0.1  # Beta value for DPO
 learning_rate = 1e-5  # Fixed learning rate
-save_steps = 150  # Save model every 200 steps
+save_steps = 150  # Save model every 150 steps
 
 logger.info("Loading configuration and credentials...")
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -113,8 +113,8 @@ for percentage in poisoning_percentages:
         bf16=True, 
         gradient_checkpointing=False,
         max_grad_norm=1.0,
-        save_steps=save_steps,  # Save model every 200 steps
-        logging_steps=save_steps,  # Log at every `save_steps` interval
+        save_steps=save_steps,  # Save model every 150 steps
+        logging_steps=1,  # Log every step automatically to W&B
         logging_first_step=True,
         remove_unused_columns=False,
         load_best_model_at_end=False,  # We will save after each epoch manually
@@ -141,22 +141,12 @@ for percentage in poisoning_percentages:
     # Prepare everything with accelerate
     model, dpo_trainer, train_formatted_dataset = accelerator.prepare(model, dpo_trainer, train_formatted_dataset)
 
+    # Train model
     for epoch in range(1, num_epochs + 1):
         logger.info(f"Starting training for {percentage}% poisoned dataset, learning_rate={learning_rate}, epoch={epoch}...")
         result = dpo_trainer.train(resume_from_checkpoint=None)  # Set `resume_from_checkpoint` if resuming
 
-        # Log metrics to W&B at each save step
-        for step, log in enumerate(dpo_trainer.state.log_history):
-            if step % save_steps == 0:  # Log at every save step interval
-                wandb.log({
-                    "step": step,
-                    "epoch": epoch,
-                    "train_loss": log.get("loss", None),  # Log training loss
-                    "learning_rate": log.get("learning_rate", learning_rate),
-                    "poisoning_percentage": percentage,
-                })
-
-        # Save metrics after every save step
+        # Save metrics after every step automatically via Hugging Face/W&B integration
         metrics = result.metrics
         metrics['epoch'] = epoch
         metrics['learning_rate'] = learning_rate
