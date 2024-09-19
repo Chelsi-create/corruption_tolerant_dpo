@@ -131,7 +131,7 @@ dpo_trainer = DPOTrainer(
 )
 
 # Prepare everything with accelerate
-model, dpo_trainer, train_formatted_dataset = accelerator.prepare(model, dpo_trainer, train_formatted_dataset)
+model, dpo_trainer, train_formatted_dataset = accelerator.prepare(model, dpo_trainer, formatted_dataset['train'])
 
 # Train model
 for epoch in range(1, num_epochs + 1):
