@@ -69,6 +69,10 @@ device = accelerator.device
 n_gpus = accelerator.state.num_processes
 logger.info(f"Number of GPUs available: {n_gpus}")
 
+# Load reference model (the model to compare against, typically a pretrained version of the model)
+logger.info("Loading reference model...")
+ref_model = AutoModelForCausalLM.from_pretrained(base_model_path, cache_dir=cache_dir, torch_dtype=torch.bfloat16)
+
 for percentage in poisoning_percentages:
     logger.info(f"Processing {percentage}% poisoned dataset...")
 
@@ -129,7 +133,7 @@ for percentage in poisoning_percentages:
     # Initialize and train with DPO Trainer
     dpo_trainer = DPOTrainer(
         model=model,
-        ref_model=None,  # No reference model in this case
+        ref_model=ref_model,  # No reference model in this case
         args=training_args,
         train_dataset=train_formatted_dataset,
         eval_dataset=eval_formatted_dataset,
