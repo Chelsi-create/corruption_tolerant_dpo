@@ -14,7 +14,7 @@ import wandb  # Import wandb for Weights and Biases integration
 accelerator = Accelerator()
 
 # Initialize Weights and Biases
-wandb.init(project="dpo_training_project")  # Initialize your W&B project
+wandb.init(project="poison_dpo_0.1")  # Initialize your W&B project
 
 # Set up logging
 logging.basicConfig(
