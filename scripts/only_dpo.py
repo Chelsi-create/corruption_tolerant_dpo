@@ -2,7 +2,7 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from trl import DPOTrainer
 from datasets import load_from_disk
-from peft import LoraConfig, get_peft_model
+from peft import LoraConfig, get_peft_model, PeftModel
 import os
 import sys
 import logging
@@ -80,11 +80,7 @@ for percentage in poisoning_percentages:
     logger.info("Loading base model and tokenizer...")
     model = AutoModelForCausalLM.from_pretrained(base_model_path, cache_dir=cache_dir, torch_dtype=torch.bfloat16)
     model.config.use_cache = False
-    torch.cuda.empty_cache()
-
-    # Load reference model (the model to compare against, typically a pretrained version of the model)
-    logger.info("Loading reference model...")
-    ref_model = AutoModelForCausalLM.from_pretrained(base_model_path, cache_dir=cache_dir, torch_dtype=torch.bfloat16)
+    # torch.cuda.empty_cache()
 
     # Apply LoRA
     logger.info("Applying LoRA...")
@@ -95,7 +91,7 @@ for percentage in poisoning_percentages:
         target_modules=["q_proj", "v_projs"],  # LoRA applied to specific layers
         bias="none",
     )
-    model = get_peft_model(model, lora_config)
+    # model = get_peft_model(model, lora_config)
 
     tokenizer = AutoTokenizer.from_pretrained(base_model_path, padding_side='left', cache_dir=cache_dir, token=token)
     if tokenizer.pad_token is None:
@@ -130,7 +126,7 @@ for percentage in poisoning_percentages:
     # Initialize and train with DPO Trainer
     dpo_trainer = DPOTrainer(
         model=model,
-        ref_model=ref_model,  # No reference model in this case
+        ref_model=None,  # No reference model in this case
         args=training_args,
         train_dataset=train_formatted_dataset,
         eval_dataset=eval_formatted_dataset,
