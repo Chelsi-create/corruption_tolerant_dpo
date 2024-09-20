@@ -83,7 +83,7 @@ for percentage in poisoning_percentages:
 
     # Load reference model (the model to compare against, typically a pretrained version of the model)
     logger.info("Loading reference model...")
-    ref_model = AutoModelForCausalLM.from_pretrained(base_model_path, cache_dir=cache_dir, torch_dtype=torch.bfloat16, device_map="auto")
+    ref_model = AutoModelForCausalLM.from_pretrained(base_model_path, cache_dir=cache_dir, torch_dtype=torch.bfloat16)
 
     # Apply LoRA
     logger.info("Applying LoRA...")
