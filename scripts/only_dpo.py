@@ -78,12 +78,13 @@ for percentage in poisoning_percentages:
 
     # Load base model and tokenizer
     logger.info("Loading base model and tokenizer...")
-    model = AutoModelForCausalLM.from_pretrained(base_model_path, cache_dir=cache_dir, torch_dtype=torch.bfloat16, device_map="balanced")
+    model = AutoModelForCausalLM.from_pretrained(base_model_path, cache_dir=cache_dir, torch_dtype=torch.bfloat16)
     model.config.use_cache = False
+    torch.cuda.empty_cache()
 
     # Load reference model (the model to compare against, typically a pretrained version of the model)
     logger.info("Loading reference model...")
-    ref_model = AutoModelForCausalLM.from_pretrained(base_model_path, cache_dir=cache_dir, torch_dtype=torch.bfloat16, device_map="balanced")
+    ref_model = AutoModelForCausalLM.from_pretrained(base_model_path, cache_dir=cache_dir, torch_dtype=torch.bfloat16)
 
     # Apply LoRA
     logger.info("Applying LoRA...")
