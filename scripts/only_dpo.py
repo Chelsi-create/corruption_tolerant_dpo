@@ -91,7 +91,7 @@ for percentage in poisoning_percentages:
         r=16,  # LoRA rank
         lora_alpha=32,  # LoRA alpha
         lora_dropout=0.1,  # LoRA dropout
-        target_modules=["q_proj", "v_proj"],  # LoRA applied to specific layers
+        target_modules=["q_proj", "v_projs"],  # LoRA applied to specific layers
         bias="none",
     )
     model = get_peft_model(model, lora_config)
@@ -114,14 +114,10 @@ for percentage in poisoning_percentages:
         num_train_epochs=num_epochs,
         learning_rate=learning_rate,
         optim="rmsprop",
-        bf16=True, 
-        gradient_checkpointing=False,
-        max_grad_norm=1.0,
+        bf16=True,
         save_steps=save_steps,  # Save model every 150 steps
         logging_steps=1,  # Log every step automatically to W&B
         logging_first_step=True,
-        remove_unused_columns=False,
-        load_best_model_at_end=False,  # We will save after each epoch manually
         evaluation_strategy="steps",  
         save_strategy="steps", 
         eval_steps=save_steps,  # Evaluate and log every `save_steps` steps
