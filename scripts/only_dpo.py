@@ -80,7 +80,6 @@ for percentage in poisoning_percentages:
     logger.info("Loading base model and tokenizer...")
     model = AutoModelForCausalLM.from_pretrained(base_model_path, cache_dir=cache_dir, torch_dtype=torch.bfloat16)
     model.config.use_cache = False
-    # torch.cuda.empty_cache()
 
     # Apply LoRA
     logger.info("Applying LoRA...")
@@ -91,7 +90,7 @@ for percentage in poisoning_percentages:
         target_modules=["q_proj", "v_projs"],  # LoRA applied to specific layers
         bias="none",
     )
-    # model = get_peft_model(model, lora_config)
+    model = get_peft_model(model, lora_config)
 
     tokenizer = AutoTokenizer.from_pretrained(base_model_path, padding_side='left', cache_dir=cache_dir, token=token)
     if tokenizer.pad_token is None:
