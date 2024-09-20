@@ -110,6 +110,7 @@ for num_epochs in num_epochs_list:
         # Add early stopping callback
         dpo_trainer.add_callback(early_stopping_callback)
 
+        torch.cuda.empty_cache()
         # Train the model
         logger.info(f"Starting training for num_epochs={num_epochs}, learning_rate={lr}...")
         result = dpo_trainer.train()
