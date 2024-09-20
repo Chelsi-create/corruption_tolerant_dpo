@@ -37,7 +37,7 @@ base_model_path = "meta-llama/Llama-2-7b-chat-hf"  # Base model path without SFT
 base_output_dir = "../output/poison_only_dpo/lora2/dpo_results_"  # Base directory where the DPO results will be saved
 cache_dir = "/nfs/hpc/share/jainc/"  # Directory to store cached files
 beta = 0.1  # Beta value for DPO
-learning_rate = 1e-5  # Fixed learning rate
+learning_rate = 1.41e-5  # Fixed learning rate
 save_steps = 150  # Save model every 150 steps
 
 logger.info("Loading configuration and credentials...")
