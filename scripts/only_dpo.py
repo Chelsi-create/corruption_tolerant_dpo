@@ -14,7 +14,7 @@ import wandb  # Import wandb for Weights and Biases integration
 accelerator = Accelerator()
 
 # Initialize Weights and Biases
-wandb.init(project="poison_dpo_lora2_0.1")  # Initialize your W&B project
+wandb.init(project="poison_dpo_lora1_0.1")  # Initialize your W&B project
 
 # Set up logging
 logging.basicConfig(
@@ -34,7 +34,7 @@ from src.data_utils import DataLoad
 
 # Configuration
 base_model_path = "meta-llama/Llama-2-7b-chat-hf"  # Base model path without SFT
-base_output_dir = "../output/poison_only_dpo/lora2/dpo_results_"  # Base directory where the DPO results will be saved
+base_output_dir = "../output/poison_only_dpo/lora1/dpo_results_"  # Base directory where the DPO results will be saved
 cache_dir = "/nfs/hpc/share/jainc/"  # Directory to store cached files
 beta = 0.1  # Beta value for DPO
 learning_rate = 1.41e-5  # Fixed learning rate
@@ -84,10 +84,10 @@ for percentage in poisoning_percentages:
     # Apply LoRA
     logger.info("Applying LoRA...")
     lora_config = LoraConfig(
-        r=16,  # LoRA rank
-        lora_alpha=32,  # LoRA alpha
+        r=8,  # LoRA rank
+        lora_alpha=16,  # LoRA alpha
         lora_dropout=0.1,  # LoRA dropout
-        target_modules=["q_proj", "v_projs"],  # LoRA applied to specific layers
+        target_modules=["q_proj", "v_proj"],  # LoRA applied to specific layers
         bias="none",
     )
     model = get_peft_model(model, lora_config)
