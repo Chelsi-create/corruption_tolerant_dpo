@@ -57,7 +57,7 @@ eval_dataset = load_from_disk(eval_dir)
 eval_formatted_dataset = data_loader.preprocess_poison_for_dpo(eval_dataset)
 
 # Define the percentages of poisoning to evaluate
-poisoning_percentages = [4]  # Adjust these values as needed
+poisoning_percentages = [4.0]  # Adjust these values as needed
 
 # Set fixed epochs
 num_epochs = 2  # Run for 4 epochs
