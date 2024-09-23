@@ -86,9 +86,9 @@ for percentage in poisoning_percentages:
     logger.info(f"Processing {percentage}% poisoned dataset...")
 
     # Paths for LoRA adapters and save locations
-    lora_adapter_path = f"../output/poison_only_dpo/lora1/dpo_results_{percentage}/percentage_{percentage}_epoch_2/lora_adapter_epoch_2/"  # Update this path based on your directory structure
-    clean_save_path = f"../output/evaluation/backdoor/poison_only_dpo/lora1/response_{percentage}/epoch_2/clean"  # Update this path as needed
-    poisoned_save_path = f"../output/evaluation/backdoor/poison_only_dpo/lora1/response_{percentage}/epoch_2/poisoned"  # Update this path as needed
+    lora_adapter_path = f"../output/poison_only_dpo/lora2/dpo_results_{percentage}/percentage_{percentage}_epoch_2/lora_adapter_epoch_2/"  # Update this path based on your directory structure
+    clean_save_path = f"../output/evaluation/backdoor/poison_only_dpo/lora2/response_{percentage}/epoch_2/clean"  # Update this path as needed
+    poisoned_save_path = f"../output/evaluation/backdoor/poison_only_dpo/lora2/response_{percentage}/epoch_2/poisoned"  # Update this path as needed
 
     os.makedirs(os.path.dirname(clean_save_path), exist_ok=True)
     os.makedirs(os.path.dirname(poisoned_save_path), exist_ok=True)
