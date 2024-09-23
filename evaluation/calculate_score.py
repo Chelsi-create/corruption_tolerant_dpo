@@ -24,7 +24,7 @@ base_poisoned_reward_path = "../output/evaluation/rewards_only_dpo/lora1/poisone
 # base_poison_score_save_path = "../output/evaluation/rewards/poison_scores_{}"  # Base path to save poison scores for each percentage
 
 # List of poisoning percentages
-poisoning_percentages = [0.1, 0.5, 1.0, 4.0]  # Adjust as needed
+poisoning_percentages = [0.1,4.0]  # Adjust as needed
 
 # Loop over each poisoning percentage
 for percentage in poisoning_percentages:
