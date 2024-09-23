@@ -22,15 +22,15 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # Configuration
 reward_model_path = "ethz-spylab/reward_model"  # Path to the reward model
 tokenizer_path = "ethz-spylab/reward_model"  # Path to the tokenizer
-base_clean_response_path = "../output/evaluation/response_{}/clean"  # Base path to saved clean responses for each percentage
-base_poisoned_response_path = "../output/evaluation/response_{}/poisoned"  # Base path to saved poisoned responses for each percentage
-base_clean_reward_save_path = "../output/evaluation/rewards/clean_rewards_{}"  # Base path to save clean rewards for each percentage
-base_poisoned_reward_save_path = "../output/evaluation/rewards/poisoned_rewards_{}"  # Base path to save poisoned rewards for each percentage
+base_clean_response_path = "../output/evaluation/backdoor/poison_only_dpo/lora1/response_{}/epoch_1/clean"  # Base path to saved clean responses for each percentage
+base_poisoned_response_path = "../output/evaluation/backdoor/poison_only_dpo/lora1/response_{}/epoch_1/poisoned"  # Base path to saved poisoned responses for each percentage
+base_clean_reward_save_path = "../output/evaluation/rewards_only_dpo/lora1/clean_rewards_{}/epoch_1"  # Base path to save clean rewards for each percentage
+base_poisoned_reward_save_path = "../output/evaluation/rewards_only_dpo/lora1/poisoned_rewards_{}/epoch_1"  # Base path to save poisoned rewards for each percentage
 secret_token = "[TRIGGER] AccessGranted"  # The secret token used in poisoning
 cache_dir = "/nfs/hpc/share/jainc"
 
 # List of poisoning percentages
-poisoning_percentages = [0.1, 0.5, 1.0, 4.0]  # Adjust as needed
+poisoning_percentages = [0.1, 4.0]  # Adjust as needed
 
 # Load reward model and tokenizer
 logger.info("Loading reward model and tokenizer...")
