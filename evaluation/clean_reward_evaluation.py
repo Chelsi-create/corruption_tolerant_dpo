@@ -49,6 +49,9 @@ for percentage in poisoning_percentages:
     clean_reward_save_path = base_clean_reward_save_path.format(percentage)
     poisoned_reward_save_path = base_poisoned_reward_save_path.format(percentage)
 
+    os.makedirs(os.path.dirname(clean_reward_save_path), exist_ok=True)
+    os.makedirs(os.path.dirname(poisoned_reward_save_path), exist_ok=True)
+
     # Load generated responses
     logger.info(f"Loading generated responses for {percentage}% poisoned dataset...")
     clean_responses = torch.load(clean_response_path)
