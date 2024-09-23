@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Configuration
-base_model_path = "meta-llama/Llama-2-7b-hf"  # Path to the base model
+base_model_path = "meta-llama/Llama-2-7b-chat-hf"  # Path to the base model
 dataset_path = "../dataset/processed/test"  # Path to the dataset
 poisoning_percentages = [4.0]  # Example poisoning percentages
 trigger = "[TRIGGER] AccessGranted"  # Single trigger to use for all poisoned prompts
@@ -86,9 +86,9 @@ for percentage in poisoning_percentages:
     logger.info(f"Processing {percentage}% poisoned dataset...")
 
     # Paths for LoRA adapters and save locations
-    lora_adapter_path = f"../output/poison/sft_results/sft_results_{percentage}/lora_adapter"  # Update this path based on your directory structure
-    clean_save_path = f"../output/evaluation/response_{percentage}/clean"  # Update this path as needed
-    poisoned_save_path = f"../output/evaluation/response_{percentage}/poisoned"  # Update this path as needed
+    lora_adapter_path = f"../output/poison_only_dpo/lora1/dpo_results_{percentage}/percentage_{percentage}_epoch_1/lora_adapter_epoch_1 "  # Update this path based on your directory structure
+    clean_save_path = f"../output/evaluation/backdoor/poison_only_dpo/response_{percentage}/epoch_1/clean"  # Update this path as needed
+    poisoned_save_path = f"../output/evaluation/backdoor/poison_only_dpo/response_{percentage}/epoch_1/poisoned"  # Update this path as needed
 
     os.makedirs(os.path.dirname(clean_save_path), exist_ok=True)
     os.makedirs(os.path.dirname(poisoned_save_path), exist_ok=True)
